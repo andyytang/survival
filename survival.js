@@ -10,7 +10,7 @@
  * Add toggle map with "m" key
  * @TODO:
  * Add comments on current code
- * Make collide function
+ * Make collide function (kind of worked on)
  * Make other inanimate objects
  * Other features that we need to add...
 ***/
@@ -19,7 +19,7 @@ var Player;
 var cam;
 //A variable defining whether the map is shown
 var togglemap = true;
-var mapsize = 10000;
+var mapsize = 5000;
 
 /***
  * Basic camera function: A function to have a “camera” follow
@@ -84,7 +84,12 @@ var referencepoint = function(x, y) {
             ellipse((this.x - 20 - Player.x)/16 + Player.x - 370, (this.y - 20 - Player.y)/16 + Player.y + 80, 2, 2);
         }
     };
+    this.collect = function() {
+        return (this.x - 100) < Player.x && Player.x < (refpoints[i].x + 100) && (refpoints[i].y - 100) < Player.y && Player.y < (refpoints[i].y + 100);
+    };
 };
+
+
 var refpoints = [];
 refpoints.add = function(x, y) {
     refpoints.push(new referencepoint(x, y));
@@ -99,11 +104,13 @@ refpoints.apply = function() {
         }
     }
 };
+
 var player = function(x, y) {
     this.x = x;
     this.y = y;
     this.w = 20;
     this.h = 20;
+    this.speed = 2;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
     this.draw = function() {
         noStroke();
@@ -132,20 +139,16 @@ var player = function(x, y) {
         if(keyIsPressed) {
             switch(key.toString()) {
                 case "w":
-                    this.x+=cos(this.dir);
-                    this.y+=sin(this.dir);
+                    this.y-=this.speed;
                     break;
                 case "s":
-                    this.x-=cos(this.dir);
-                    this.y-=sin(this.dir);
+                    this.y+=this.speed;
                     break;
                 case "a":
-                    this.x+=cos(this.dir-90);
-                    this.y+=sin(this.dir-90);
-                break;
+                    this.x-=this.speed;
+                    break;
                 case "d":
-                    this.x+=cos(this.dir+90);
-                    this.y+=sin(this.dir+90);
+                    this.x+=this.speed;
                 break;
             }
         }
@@ -157,12 +160,21 @@ var player = function(x, y) {
         text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
     };
 };
+
 Player = new player(5000, 5000);
 cam = new Camera(Player.x, Player.y);
 
 for(var i = 0; i < 1000; i++) {
     refpoints.add(random(0, 10000), random(0, 10000));  
 }
+
+mouseClicked = function() {
+    for (var i = 0; i < refpoints.length(); i++) {
+    if ( && (refpoints[i].x - 100) < mouseX && mouseY < (refpoints[i].x + 100)  ) {
+        println("harvesting that boi");
+    }
+    }
+};
 
 //Use the switch in this function to find
 keyPressed = function() {
