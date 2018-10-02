@@ -10,7 +10,7 @@
  * Add toggle map with "m" key
  * @TODO:
  * Add comments on current code
- * Make collide function (kind of worked on)
+ * Make collide function
  * Make other inanimate objects
  * Other features that we need to add...
 ***/
@@ -62,6 +62,9 @@ var farview = function(obj){
     obj.y+height*2-cam.y<height*8&&obj.y+height*2-cam.y>-obj.h;
 };
 
+
+var refpoints = [];
+
 //Reference points for player testing
 var referencepoint = function(x, y) {
     this.x = x;
@@ -84,13 +87,12 @@ var referencepoint = function(x, y) {
             ellipse((this.x - 20 - Player.x)/16 + Player.x - 370, (this.y - 20 - Player.y)/16 + Player.y + 80, 2, 2);
         }
     };
-    this.collect = function() {
-        return (this.x - 100) < Player.x && Player.x < (refpoints[i].x + 100) && (refpoints[i].y - 100) < Player.y && Player.y < (refpoints[i].y + 100);
+    this.harvest = function()  {
+        this.w -= 10;
+        this.h -= 10;
     };
 };
 
-
-var refpoints = [];
 refpoints.add = function(x, y) {
     refpoints.push(new referencepoint(x, y));
 };
@@ -159,20 +161,23 @@ var player = function(x, y) {
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
         text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
     };
+    this.collectTree = function(refpoint){
+        return abs(this.x - refpoint.x) < (refpoint.w*refpoint.leaves) && abs(this.y - refpoint.y) < (refpoint.w*refpoint.leaves);
+    };
 };
 
 Player = new player(5000, 5000);
 cam = new Camera(Player.x, Player.y);
 
-for(var i = 0; i < 1000; i++) {
+for(var b = 0; b < 1000; b++) {
     refpoints.add(random(0, 10000), random(0, 10000));  
 }
 
 mouseClicked = function() {
-    for (var i = 0; i < refpoints.length(); i++) {
-    if ( && (refpoints[i].x - 100) < mouseX && mouseY < (refpoints[i].x + 100)  ) {
-        println("harvesting that boi");
-    }
+    for (var i = 0; i < refpoints.length; i++) {
+        if (Player.collectTree(refpoints[i]) === true) {
+            refpoints[i].harvest();
+        }
     }
 };
 
