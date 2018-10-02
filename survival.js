@@ -91,6 +91,10 @@ var referencepoint = function(x, y) {
             ellipse((this.x - 20 - Player.x)/16 + Player.x - 370, (this.y - 20 - Player.y)/16 + Player.y + 80, 2, 2);
         }
     };
+    this.harvest = function()  {
+        this.w -= 10;
+        this.h -= 10;
+    };
 };
 var refpoints = [];
 refpoints.add = function(x, y) {
@@ -156,6 +160,9 @@ var player = function(x, y) {
         fill(0);
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
         text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
+    };
+    this.collectTree = function(refpoint){
+        return abs(this.x - refpoint.x) < (refpoint.w*refpoint.leaves) && abs(this.y - refpoint.y) < (refpoint.w*refpoint.leaves);
     };
 };
 Player = new player(5000, 5000);
