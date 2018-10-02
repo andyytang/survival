@@ -172,6 +172,13 @@ for(var i = 0; i < 1000; i++) {
     refpoints.add(random(0, 10000), random(0, 10000));  
 }
 
+mouseClicked = function() {
+    for (var i = 0; i < refpoints.length; i++) {
+        if (Player.collectTree(refpoints[i]) === true) {
+            refpoints[i].harvest();
+        }
+    }
+};
 
 var scene = 0;
 var draw = function() {
