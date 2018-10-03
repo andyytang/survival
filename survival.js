@@ -14,12 +14,17 @@
  * Make other inanimate objects
  * Other features that we need to add...
 ***/
+textFont(createFont("Candara"), 15);
 //Uninitialized variables for the Player and the camera (so things don't throw errors at us)
 var Player;
 var cam;
 //A variable defining whether the map is shown
-var togglemap = true;
-var mapsize = 5000;
+var togglemap = false;
+var mapsize = 10000;
+var keys = [];
+//@key interaction
+keyPressed = function(){keys[keyCode]=true;};
+keyReleased = function(){ keys[keyCode]=false; };
 
 /***
  * Basic camera function: A function to have a “camera” follow
@@ -47,6 +52,8 @@ var Camera = function(x, y) {
     };
 };
 
+
+
 /***
  * Simple function to find if the object is in view of the camera.
  * @param obj the object that is to be analysed
@@ -61,9 +68,6 @@ var farview = function(obj){
     return obj.x+width*2-cam.x<width*8&&obj.x+width*2-cam.x>-obj.w&&
     obj.y+height*2-cam.y<height*8&&obj.y+height*2-cam.y>-obj.h;
 };
-
-
-var refpoints = [];
 
 //Reference points for player testing
 var referencepoint = function(x, y) {
@@ -92,7 +96,7 @@ var referencepoint = function(x, y) {
         this.h -= 10;
     };
 };
-
+var refpoints = [];
 refpoints.add = function(x, y) {
     refpoints.push(new referencepoint(x, y));
 };
@@ -106,14 +110,14 @@ refpoints.apply = function() {
         }
     }
 };
-
 var player = function(x, y) {
     this.x = x;
     this.y = y;
+    this.speed = 0;
     this.w = 20;
     this.h = 20;
-    this.speed = 2;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
+    this.speedLimit = 3;
     this.draw = function() {
         noStroke();
         fill(255, 224, 157);
@@ -138,23 +142,19 @@ var player = function(x, y) {
         }
     };
     this.update = function() {
-        if(keyIsPressed) {
-            switch(key.toString()) {
-                case "w":
-                    this.y-=this.speed;
-                    break;
-                case "s":
-                    this.y+=this.speed;
-                    break;
-                case "a":
-                    this.x-=this.speed;
-                    break;
-                case "d":
-                    this.x+=this.speed;
-                break;
-            }
+        if(keys[UP] || keys[87]) {
+            this.speed += 0.1;
+        }
+        else if(keys[DOWN] || keys[83]) {
+            this.speed -= 0.1;
+        }
+        else {
+            this.speed *= 0.5;
         }
         this.dir = atan2(mouseY - height/2, mouseX - width/2);
+        this.speed = constrain(this.speed, -1*this.speedLimit, this.speedLimit);
+        this.x += cos(this.dir)*this.speed;
+        this.y += sin(this.dir)*this.speed;
     };
     this.stats = function() {
         fill(0);
@@ -165,11 +165,10 @@ var player = function(x, y) {
         return abs(this.x - refpoint.x) < (refpoint.w*refpoint.leaves) && abs(this.y - refpoint.y) < (refpoint.w*refpoint.leaves);
     };
 };
-
 Player = new player(5000, 5000);
 cam = new Camera(Player.x, Player.y);
 
-for(var b = 0; b < 1000; b++) {
+for(var i = 0; i < 1000; i++) {
     refpoints.add(random(0, 10000), random(0, 10000));  
 }
 
@@ -178,15 +177,6 @@ mouseClicked = function() {
         if (Player.collectTree(refpoints[i]) === true) {
             refpoints[i].harvest();
         }
-    }
-};
-
-//Use the switch in this function to find
-keyPressed = function() {
-    switch(key.toString()) {
-        case "m":
-            togglemap = !togglemap;
-            break;
     }
 };
 
