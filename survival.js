@@ -4,13 +4,14 @@
  * Make randomly generated ref points
  * Make camera follow player around
  * Make ref points into trees
- * Nice WASD flow 
+ * Make player face cursor
+ * Nice WASD flow
  * Show stats on where you are and angle
  * Add map you can see at bottom left
  * Add toggle map with "m" key
  * @TODO:
  * Add comments on current code
- * Make collide function (v1 DONE)
+ * Make collide function COMPLETE
  * Make other inanimate objects
  * Other features that we need to add...
 ***/
@@ -19,9 +20,24 @@ textFont(createFont("Candara"), 15);
 var Player;
 var cam;
 //A variable defining whether the map is shown
-var togglemap = false;
+var togglemap = true;
 var mapsize = 10000;
 var keys = [];
+var xoff = round(random(0, 10000));
+var sum = 0;    
+var grid = [];
+for (var x = 0; x < 100; x ++) {
+    var yoff = xoff;
+    for(var y = 0; y < 100; y ++) {
+        noStroke();
+        var bright = map(noise(xoff, yoff), 0, 1, 0, 255);
+        grid[x*100 + y] = bright;
+        yoff += 0.02;
+        sum += bright;
+    }
+    xoff += 0.02;
+}
+var avg = sum/10000;
 //@key interaction
 keyPressed = function(){keys[keyCode]=true;};
 keyReleased = function(){ keys[keyCode]=false; };
@@ -187,10 +203,6 @@ var player = function(x, y) {
 Player = new player(5000, 5000);
 cam = new Camera(Player.x, Player.y);
 
-for(var i = 0; i < 1000; i++) {
-    refpoints.add(random(0, 10000), random(0, 10000));  
-}
-
 mouseClicked = function() {
     for (var i = 0; i < refpoints.length; i++) {
         if (Player.collectTree(refpoints[i]) === true) {
@@ -198,6 +210,20 @@ mouseClicked = function() {
         }
     }
 };
+
+for(var i = 0; i < 1000; i++) {
+    var x = random(0, 10000);
+    var y = random(0, 10000);
+    var position = round(x/100)*100 + round(y/100);
+    while(grid[position] < avg){
+        x = random(0, 10000);
+        y = random(0, 10000);
+        position = round(x/100)*100 + round(y/100);
+    }
+    refpoints.add(x, y);  
+}
+        
+
 
 var scene = 0;
 var draw = function() {
