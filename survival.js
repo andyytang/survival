@@ -4,13 +4,13 @@
  * Make randomly generated ref points
  * Make camera follow player around
  * Make ref points into trees
- * Nice WASD flow 
+ * Make player face cursor
  * Show stats on where you are and angle
  * Add map you can see at bottom left
  * Add toggle map with "m" key
  * @TODO:
  * Add comments on current code
- * Make collide function (v1 DONE)
+ * Make collide function
  * Make other inanimate objects
  * Other features that we need to add...
 ***/
@@ -19,9 +19,24 @@ textFont(createFont("Candara"), 15);
 var Player;
 var cam;
 //A variable defining whether the map is shown
-var togglemap = false;
+var togglemap = true;
 var mapsize = 10000;
 var keys = [];
+var xoff = round(random(0, 10000));
+var sum = 0;    
+var grid = [];
+for (var x = 0; x < 100; x ++) {
+    var yoff = xoff;
+    for(var y = 0; y < 100; y ++) {
+        noStroke();
+        var bright = map(noise(xoff, yoff), 0, 1, 0, 255);
+        grid[x*100 + y] = bright;
+        yoff += 0.02;
+        sum += bright;
+    }
+    xoff += 0.02;
+}
+var avg = sum/10000;
 //@key interaction
 keyPressed = function(){keys[keyCode]=true;};
 keyReleased = function(){ keys[keyCode]=false; };
@@ -91,10 +106,6 @@ var referencepoint = function(x, y) {
             ellipse((this.x - 20 - Player.x)/16 + Player.x - 370, (this.y - 20 - Player.y)/16 + Player.y + 80, 2, 2);
         }
     };
-    this.harvest = function()  {
-        this.w -= 10;
-        this.h -= 10;
-    };
 };
 var refpoints = [];
 refpoints.add = function(x, y) {
@@ -113,8 +124,7 @@ refpoints.apply = function() {
 var player = function(x, y) {
     this.x = x;
     this.y = y;
-    this.xspeed = 0;
-    this.yspeed = 0;
+    this.speed = 0;
     this.w = 20;
     this.h = 20;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
@@ -144,60 +154,41 @@ var player = function(x, y) {
     };
     this.update = function() {
         if(keys[UP] || keys[87]) {
-            this.yspeed -= 0.1;
-            
+            this.speed += 0.1;
         }
-        if (keys[DOWN] || keys[83]) {
-            this.yspeed += 0.1;
+        else if(keys[DOWN] || keys[83]) {
+            this.speed -= 0.1;
         }
-        if(keys[LEFT] || keys[65]){
-            this.xspeed -= 0.1;
+        else {
+            this.speed *= 0.5;
         }
-        if(keys[RIGHT] || keys[68]) {
-            this.xspeed += 0.1;
-        }
-        this.y += this.yspeed;
-        this.x += this.xspeed;
-        this.xspeed *= 0.93;
-        this.yspeed *= 0.93;
         this.dir = atan2(mouseY - height/2, mouseX - width/2);
-        this.xspeed = constrain(this.xspeed, -1*this.speedLimit, this.speedLimit);
-        this.yspeed = constrain(this.yspeed, -1*this.speedLimit, this.speedLimit);
-       /* this.x += cos(this.dir)*this.speed;
-        this.y += sin(this.dir)*this.speed;*/
-        
-        /*if (keys[UP] || keys[87]) {
-            screeny += pagil;
-            pr = 90;
-    }
-    if (keys[DOWN] || keys[83]) {
-        screeny -= pagil;
-        pr = 90;
-    }*/
+        this.speed = constrain(this.speed, -1*this.speedLimit, this.speedLimit);
+        this.x += cos(this.dir)*this.speed;
+        this.y += sin(this.dir)*this.speed;
     };
     this.stats = function() {
         fill(0);
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
         text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
     };
-    this.collectTree = function(refpoint){
-        return abs(this.x - refpoint.x)*2 < (refpoint.w*refpoint.leaves) && abs(this.y - refpoint.y)*2 < (refpoint.w*refpoint.leaves);
-    };
 };
 Player = new player(5000, 5000);
 cam = new Camera(Player.x, Player.y);
 
 for(var i = 0; i < 1000; i++) {
-    refpoints.add(random(0, 10000), random(0, 10000));  
-}
-
-mouseClicked = function() {
-    for (var i = 0; i < refpoints.length; i++) {
-        if (Player.collectTree(refpoints[i]) === true) {
-            refpoints[i].harvest();
-        }
+    var x = random(0, 10000);
+    var y = random(0, 10000);
+    var position = round(x/100)*100 + round(y/100);
+    while(grid[position] < avg){
+        x = random(0, 10000);
+        y = random(0, 10000);
+        position = round(x/100)*100 + round(y/100);
     }
-};
+    refpoints.add(x, y);  
+}
+        
+
 
 var scene = 0;
 var draw = function() {
