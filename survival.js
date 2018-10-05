@@ -20,7 +20,7 @@ textFont(createFont("Candara"), 15);
 var Player;
 var cam;
 //A variable defining whether the map is shown
-var togglemap = true;
+var togglemap = false;
 var mapsize = 10000;
 var keys = [];
 var xoff = round(random(0, 10000));
