@@ -9,6 +9,7 @@
  * Show stats on where you are and angle
  * Add map you can see at bottom left
  * Add toggle map with "m" key
+ * 5 slot inventory (although 10 slots displayed on screen
  * @TODO:
  * Add comments on current code
  * Make collide function COMPLETE
@@ -20,7 +21,7 @@ textFont(createFont("Candara"), 15);
 var Player;
 var cam;
 //A variable defining whether the map is shown
-var togglemap = false;
+var togglemap = false; //Not working now with the inventory
 var mapsize = 10000;
 var keys = [];
 var xoff = round(random(0, 10000));
@@ -41,6 +42,46 @@ var avg = sum/10000;
 //@key interaction
 keyPressed = function(){keys[keyCode]=true;};
 keyReleased = function(){ keys[keyCode]=false; };
+
+/**
+ * Key - (index of array is its id, deprecated id array)
+ * 0 = wood
+ * 1 = berry (WIP)
+ * 2 = stone (WIP)
+ * 3 = crafting box (WIP)
+ *
+ * */
+
+var obj_count = [0, 0, 0, 0, 0]; //Displayed in reverse order (sorry but that's the best way it could be designed
+
+/** Lynette's Inventory*/
+var Inventory = function(x, y) {
+    this.x = x;
+    this.y = y;
+    this.draw = function() {
+         stroke(100, 100, 100);
+    fill(200, 200, 200);
+    rect(this.x, this.y, 555, 65);
+    stroke(60, 60, 60);
+    for(var i = 260; i < 750; i += 60) {
+        fill(130, 130, 130);
+        rect(i, 550, 50, 50);
+    }
+    
+    var inc = 0;
+    for (var i = 0; i < obj_count.length; i++) {
+        if (obj_count[i] > 0) {
+            fill(255, 255, 255);
+            text(obj_count[i], 740 - 60 * inc, 570);
+            inc++;
+        }
+    }
+    };
+};
+
+
+var inventory = new Inventory(500, 550);
+
 
 /***
  * Basic camera function: A function to have a “camera” follow
@@ -67,8 +108,6 @@ var Camera = function(x, y) {
         translate(width/2-this.x,height/2-this.y);
     };
 };
-
-
 
 /***
  * Simple function to find if the object is in view of the camera.
@@ -108,8 +147,8 @@ var referencepoint = function(x, y) {
         }
     };
     this.harvest = function()  {
-        this.w -= 10;
-        this.h -= 10;
+        this.w -= (40/this.leaves);
+        this.h -= (40/this.leaves);
     };
 };
 var refpoints = [];
@@ -126,6 +165,7 @@ refpoints.apply = function() {
         }
     }
 };
+
 var player = function(x, y) {
     this.x = x;
     this.y = y;
@@ -207,6 +247,7 @@ mouseClicked = function() {
     for (var i = 0; i < refpoints.length; i++) {
         if (Player.collectTree(refpoints[i]) === true) {
             refpoints[i].harvest();
+            obj_count[0]++;
         }
     }
 };
@@ -229,6 +270,7 @@ var scene = 0;
 var draw = function() {
     if(scene === 0) {
         background(120, 180, 94);
+        rectMode(CORNER);
         pushMatrix();
         cam.view(Player);
         Player.draw();
@@ -236,5 +278,7 @@ var draw = function() {
         Player.update();
         popMatrix();
         Player.stats();
+        rectMode(CENTER);
+        inventory.draw();
     }
 };
