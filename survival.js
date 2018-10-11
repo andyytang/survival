@@ -125,19 +125,32 @@ var farview = function(obj){
 };
 
 //Reference points for player testing
+//Reference points for player testing
 var referencepoint = function(x, y) {
     this.x = x;
     this.y = y;
     this.w = 40;
     this.h = 40;
+    this.r = 40;
+    this.leafmult = 5/4;
     this.leaves = round(random(3, 5));
     this.draw = function() {
         if(view(this)) { 
             noStroke();
-            fill(130, 70, 13);
-            ellipse(this.x, this.y, this.w, this.h);
-            fill(137, 177, 146, 125);
-            ellipse(this.x, this.y, this.w*this.leaves, this.w*this.leaves);
+    fill(11, 120, 18);
+    ellipse(this.x, this.y, this.r*14/4, this.r*14/4);
+    ellipse(this.x-58, this.y-8, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x-44, this.y-45, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x-9, this.y-60, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x+31, this.y-53, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x+59, this.y-23, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x+61, this.y+10, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x+43, this.y+43, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x+10, this.y+56, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x-26, this.y+55, this.leafmult*this.r, this.leafmult*this.r);
+    ellipse(this.x-55, this.y+30, this.leafmult*this.r, this.leafmult*this.r);
+    fill(92, 46, 4);
+    ellipse(this.x, this.y, this.r, this.r);
         }
     };
     this.fardraw = function() {
@@ -162,6 +175,53 @@ refpoints.apply = function() {
     if(togglemap) {
         for(var i = 0; i < refpoints.length; i++) {
             refpoints[i].fardraw();
+        }
+    }
+};
+
+var bush = function(x, y) {
+    this.x = x;
+    this.y = y;
+    this.w = 40;
+    this.h = 40;
+    this.r = 40;
+    this.draw = function() {
+        if(view(this)) { 
+            noStroke();
+            fill(19, 145, 21);
+            ellipse(this.x, this.y, this.w, this.h);
+            ellipse(this.x-20, this.y, this.w*(4/5), this.h*0.8);
+            ellipse(this.x-9, this.y-15, this.w*0.7, this.h*0.7);
+            fill(247, 15, 15);
+            ellipse(this.x+8, this.y-4, this.w/5, this.h/5);
+            ellipse(this.x-23, this.y+1, this.w/5, this.h/5);
+            ellipse(this.x-11, this.y-17, this.w/5, this.h/5);
+            ellipse(this.x-1, this.y+10, this.w/5, this.h/5);
+        }
+    };
+    this.fardraw = function() {
+        if(farview(this)) {
+            fill(255, 255, 255);
+            ellipse((this.x - 20 - Player.x)/16 + Player.x - 370, (this.y - 20 - Player.y)/16 + Player.y + 80, 2, 2);
+        }
+    };
+    this.harvest = function()  {
+        //Implement stuff, I'll see lawrence
+        this.w -= 10;
+        this.h -= 10;
+    };
+};
+var bushes = [];
+bushes.add = function(x, y) {
+    bushes.push(new bush(x, y));
+};
+bushes.apply = function() {
+    for(var i = 0; i < bushes.length; i++) {
+        bushes[i].draw();
+    }
+    if(togglemap) {
+        for(var i = 0; i < bushes.length; i++) {
+            bushes[i].fardraw();
         }
     }
 };
@@ -265,6 +325,18 @@ for(var i = 0; i < 1000; i++) {
 }
         
 
+for(var i = 0; i < 500; i++) {
+    var a = random(0, 10000);
+    var b = random(0, 10000);
+    var position = round(a/100)*100 + round(b/100);
+    while(grid[position] > avg - 1){
+        a = random(0, 10000);
+        b = random(0, 10000);
+        position = round(a/100)*100 + round(b/100);
+    }
+    bushes.add(a,b);  
+}
+
 
 var scene = 0;
 var draw = function() {
@@ -275,6 +347,7 @@ var draw = function() {
         cam.view(Player);
         Player.draw();
         refpoints.apply();
+        bushes.apply();
         Player.update();
         popMatrix();
         Player.stats();
