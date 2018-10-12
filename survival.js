@@ -170,24 +170,26 @@ var bush = function(x, y) {
     this.w = 40;
     this.h = 40;
     this.r = 40;
+    this.berries = [[this.x+8, this.y-4], [this.x-23, this.y+1],[this.x-11, this.y-17], [this.x-1, this.y+10]];
     this.draw = function() {
         if(view(this)) { 
             noStroke();
             fill(19, 145, 21);
+             if (this.berries.length !== 0){
             ellipse(this.x, this.y, this.w, this.h);
             ellipse(this.x-20, this.y, this.w*(4/5), this.h*0.8);
             ellipse(this.x-9, this.y-15, this.w*0.7, this.h*0.7);
-            fill(247, 15, 15);
-            ellipse(this.x+8, this.y-4, this.w/5, this.h/5);
-            ellipse(this.x-23, this.y+1, this.w/5, this.h/5);
-            ellipse(this.x-11, this.y-17, this.w/5, this.h/5);
-            ellipse(this.x-1, this.y+10, this.w/5, this.h/5);
+            
+            for (var i = 0; i < this.berries.length; i++){
+               fill(247, 15, 15);
+               ellipse(this.berries[i][0], this.berries[i][1], this.w/5, this.h/5);
+            }
+             }
         }
     };
     this.harvest = function()  {
-        //Implement stuff, I'll see lawrence
-        this.w -= 10;
-        this.h -= 10;
+        this.berries.splice(floor(random(0,1)*this.berries.length), 1);
+       
     };
 };
 var bushes = [];
@@ -261,6 +263,9 @@ var player = function(x, y) {
     this.collectTree = function(refpoint){
         return abs(this.x - refpoint.x)*2 < (refpoint.w*refpoint.leaves) && abs(this.y - refpoint.y)*2 < (refpoint.w*refpoint.leaves);
     };
+    this.collectBush = function(bush){
+        return abs(this.x - bush.x)*2 < (bush.r * 1.5) && abs(this.y - bush.y)*2 < (bush.r * 1.5);
+    };
 };
 Player = new player(2000, 2000);
 cam = new Camera(Player.x, Player.y);
@@ -270,6 +275,12 @@ mouseClicked = function() {
         if (Player.collectTree(refpoints[i]) === true) {
             refpoints[i].harvest();
             obj_count[0]++;
+        }
+    }
+    for (var i = 0; i < bushes.length; i++) {
+        if (Player.collectBush(bushes[i]) === true) {
+            bushes[i].harvest();
+            obj_count[1]++;
         }
     }
 };
@@ -313,9 +324,9 @@ var draw = function() {
         rectMode(CORNER);
         pushMatrix();
         cam.view(Player);
-        Player.draw();
         refpoints.apply();
         bushes.apply();
+        Player.draw();
         Player.update();
         popMatrix();
         Player.stats();
