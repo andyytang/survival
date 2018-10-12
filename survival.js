@@ -21,10 +21,9 @@ textFont(createFont("Candara"), 15);
 var Player;
 var cam;
 //A variable defining whether the map is shown
-var togglemap = false; //Not working now with the inventory
-var mapsize = 10000;
+var mapsize = 4000;
 var keys = [];
-var xoff = round(random(0, 10000));
+var xoff = round(random(0, 4000));
 var sum = 0;    
 var grid = [];
 for (var x = 0; x < 100; x ++) {
@@ -96,15 +95,15 @@ var Camera = function(x, y) {
     /***
       * Basic view function: Moves the screen to focus on the object plyer
       * by translation. Will not move past the edge of map (0,0) upper left to 
-      * (10000, 10000) lower right.
+      * (4000, 4000) lower right.
       * @param plyer an object that the camera is following which has x and y
     ***/
     this.view = function(plyer){
         this.x=plyer.x;
         this.y=plyer.y;
         
-        this.x = constrain(this.x,this.w/2,10000-this.w/2);
-        this.y = constrain(this.y,this.h/2,10000-this.h/2);
+        this.x = constrain(this.x,this.w/2,4000-this.w/2);
+        this.y = constrain(this.y,this.h/2,4000-this.h/2);
         translate(width/2-this.x,height/2-this.y);
     };
 };
@@ -119,49 +118,40 @@ var view = function(obj){
 };
 
 
-var farview = function(obj){
-    return obj.x+width*2-cam.x<width*8&&obj.x+width*2-cam.x>-obj.w&&
-    obj.y+height*2-cam.y<height*8&&obj.y+height*2-cam.y>-obj.h;
-};
-
-//Reference points for player testing
 //Reference points for player testing
 var referencepoint = function(x, y) {
-    this.x = x;
+this.x = x;
     this.y = y;
     this.w = 40;
     this.h = 40;
     this.r = 40;
-    this.leafmult = 5/4;
-    this.leaves = round(random(3, 5));
+    this.leaves = random(4, 5);
+    this.leafmult = this.leaves/4;
+    this.leafpositions = [];
+    for(var i = 0; i < this.leaves*3; i++) {
+        this.leafpositions[i] = random(15, 20);
+    }
     this.draw = function() {
-        if(view(this)) { 
-            noStroke();
-    fill(11, 120, 18);
-    ellipse(this.x, this.y, this.r*14/4, this.r*14/4);
-    ellipse(this.x-58, this.y-8, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x-44, this.y-45, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x-9, this.y-60, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x+31, this.y-53, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x+59, this.y-23, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x+61, this.y+10, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x+43, this.y+43, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x+10, this.y+56, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x-26, this.y+55, this.leafmult*this.r, this.leafmult*this.r);
-    ellipse(this.x-55, this.y+30, this.leafmult*this.r, this.leafmult*this.r);
-    fill(92, 46, 4);
-    ellipse(this.x, this.y, this.r, this.r);
+        noStroke();
+        fill(11, 120, 18);
+        ellipse(this.x, this.y, this.r*this.leafmult*14/4, this.r*this.leafmult*14/4);
+        pushMatrix();
+        translate(this.x, this.y);
+        for(var i = 0; i < this.leafpositions.length; i++) {
+            rotate(120/this.leaves);
+            ellipse(this.leafpositions[i]*this.leaves, -3*this.leaves, this.leafmult*this.r, this.leafmult*this.r);
         }
-    };
-    this.fardraw = function() {
-        if(farview(this)) {
-            fill(200, 100, 0);
-            ellipse((this.x - 20 - Player.x)/16 + Player.x - 370, (this.y - 20 - Player.y)/16 + Player.y + 80, 2, 2);
-        }
+        popMatrix();
+        fill(92, 46, 4);
+        ellipse(this.x, this.y, this.r, this.r);
     };
     this.harvest = function()  {
         this.w -= (40/this.leaves);
         this.h -= (40/this.leaves);
+        this.r -= (40/this.leaves);
+        for(var i = 0; i < this.leaves*3; i++) {
+            this.leafpositions[i] *= this.w / (this.w + 40/this.leaves);
+        }
     };
 };
 var refpoints = [];
@@ -171,11 +161,6 @@ refpoints.add = function(x, y) {
 refpoints.apply = function() {
     for(var i = 0; i < refpoints.length; i++) {
         refpoints[i].draw();
-    }
-    if(togglemap) {
-        for(var i = 0; i < refpoints.length; i++) {
-            refpoints[i].fardraw();
-        }
     }
 };
 
@@ -199,12 +184,6 @@ var bush = function(x, y) {
             ellipse(this.x-1, this.y+10, this.w/5, this.h/5);
         }
     };
-    this.fardraw = function() {
-        if(farview(this)) {
-            fill(255, 255, 255);
-            ellipse((this.x - 20 - Player.x)/16 + Player.x - 370, (this.y - 20 - Player.y)/16 + Player.y + 80, 2, 2);
-        }
-    };
     this.harvest = function()  {
         //Implement stuff, I'll see lawrence
         this.w -= 10;
@@ -218,11 +197,6 @@ bushes.add = function(x, y) {
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
         bushes[i].draw();
-    }
-    if(togglemap) {
-        for(var i = 0; i < bushes.length; i++) {
-            bushes[i].fardraw();
-        }
     }
 };
 
@@ -245,18 +219,6 @@ var player = function(x, y) {
         rect(0, 6, 20, 5, 2);
         popMatrix();
         fill(0);
-        if(togglemap) {
-            pushMatrix();
-            translate(this.x - 370, this.y + 70);  
-            rotate(this.dir);
-            stroke(0);
-            ellipse(0, 0, 4, 4);
-            line(0, 0, 5, 0);
-            noStroke();
-            popMatrix();
-            fill(0, 0, 255, 20);
-            rect(this.x - width/2, this.y, 450, 300);
-        }
     };
     this.update = function() {
         if(keys[UP] || keys[87]) {
@@ -300,7 +262,7 @@ var player = function(x, y) {
         return abs(this.x - refpoint.x)*2 < (refpoint.w*refpoint.leaves) && abs(this.y - refpoint.y)*2 < (refpoint.w*refpoint.leaves);
     };
 };
-Player = new player(5000, 5000);
+Player = new player(2000, 2000);
 cam = new Camera(Player.x, Player.y);
 
 mouseClicked = function() {
@@ -312,31 +274,37 @@ mouseClicked = function() {
     }
 };
 
-for(var i = 0; i < 1000; i++) {
-    var x = random(0, 10000);
-    var y = random(0, 10000);
-    var position = round(x/100)*100 + round(y/100);
-    while(grid[position] < avg){
-        x = random(0, 10000);
-        y = random(0, 10000);
-        position = round(x/100)*100 + round(y/100);
+for(var i = 0; i < 150; i++) {
+    var x = random(0, 4000);
+    var y = random(0, 4000);
+    var position = round(x/40)*100 + round(y/40);
+    while(grid[position] < avg + 1){
+        x = random(0, 4000);
+        y = random(0, 4000);
+        position = round(x/40)*100 + round(y/40);
     }
     refpoints.add(x, y);  
 }
         
 
-for(var i = 0; i < 500; i++) {
-    var a = random(0, 10000);
-    var b = random(0, 10000);
-    var position = round(a/100)*100 + round(b/100);
+for(var i = 0; i < 50; i++) {
+    var a = random(0, 4000);
+    var b = random(0, 4000);
+    var position = round(a/40)*100 + round(b/40);
     while(grid[position] > avg - 1){
-        a = random(0, 10000);
-        b = random(0, 10000);
-        position = round(a/100)*100 + round(b/100);
+        a = random(0, 4000);
+        b = random(0, 4000);
+        position = round(a/40)*100 + round(b/40);
     }
     bushes.add(a,b);  
 }
 
+for(var i = 0; i < 100; i++) {
+    for(var j = 0; j < 100; j++) {
+        fill(grid[i*100 + j]);
+        rect(i*5, j*5, 5, 5);
+    }
+}
 
 var scene = 0;
 var draw = function() {
