@@ -224,7 +224,6 @@ var player = function(x, y) {
         if(keys[RIGHT] || keys[68]) {
             this.xspeed += 0.1;
         }
-        println(this.xspeed);
         this.x += this.xspeed;
         this.applyCollision(trees, this.xspeed, 0);
         this.y += this.yspeed;
@@ -270,7 +269,7 @@ var player = function(x, y) {
         }
     };
 };
-Player = new player(200, 200);
+Player = new player(2000, 2000);
 cam = new Camera(Player.x, Player.y);
 
 mouseClicked = function() {
