@@ -163,6 +163,17 @@ var bush = function(x, y) {
     this.y = y;
     this.r = 40;
     this.berries = [[this.x+8, this.y-4], [this.x-23, this.y+1],[this.x-11, this.y-17], [this.x-1, this.y+10]];
+    this.randomBerries = function() {
+        var randomLength = floor(random(0, 4));
+
+if (randomLength > 0) {
+for(var i = 0; i < randomLength; i++){
+  this.berries.splice(floor(random(0, 1)*this.berries.length), 1);
+}
+} else {
+    this.randomBerries();
+}
+    };
     this.draw = function() {
         if(view(this)) { 
             noStroke();
@@ -187,7 +198,10 @@ var bush = function(x, y) {
 var bushes = [];
 bushes.add = function(x, y) {
     bushes.push(new bush(x, y));
+    
 };
+
+    
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
         bushes[i].draw();
@@ -283,7 +297,7 @@ mouseClicked = function() {
         }
     }
     for (var i = 0; i < bushes.length; i++) {
-        if (Player.collectBush(bushes[i]) === true) {
+        if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0) {
             bushes[i].harvest();
             obj_count[1]++;
         }
@@ -313,6 +327,10 @@ for(var i = 0; i < 150; i++) {
         position = round(a/40)*100 + round(b/40);
     }
     bushes.add(a,b);
+}
+
+for (var i = 0; i < bushes.length; i++){
+    bushes[i].randomBerries();
 }
 
 
