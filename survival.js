@@ -152,6 +152,9 @@ trees.add = function(x, y) {
 trees.apply = function() {
     for(var i = 0; i < trees.length; i++) {
         trees[i].draw();
+         if (trees[i].r === 0) {
+            trees.splice(i, 1);
+        }
     }
 };
 
