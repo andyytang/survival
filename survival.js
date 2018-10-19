@@ -32,6 +32,7 @@ var Player;
 var cam;
 var mapsize = 4000;
 var keys = [];
+var generator = new Random(1);
 textFont(createFont("Candara"), 15);
 }
 //@MAP GENERATION
@@ -51,8 +52,13 @@ for (var x = 0; x < 100; x ++) {
     xoff += 0.02;
 }
 var avg = sum/10000;
+var stdev = 0;
+for(var i = 0; i < grid.length; i++) {
+    stdev += Math.pow(abs(grid[i] - avg), 2);
 }
-
+stdev /= 10000;
+stdev = Math.sqrt(stdev);
+}
 //@KEY INTERACTION
 keyPressed = function(){keys[keyCode]=true;};
 keyReleased = function(){ keys[keyCode]=false; };
@@ -306,7 +312,8 @@ for(var i = 0; i < 450; i++) {
     var x = random(0, 4000);
     var y = random(0, 4000);
     var position = round(x/40)*100 + round(y/40);
-    while(grid[position] < avg + 1){
+    var num = generator.nextGaussian();
+    while(grid[position] < num*stdev + avg){
         x = random(0, 4000);
         y = random(0, 4000);
         position = round(x/40)*100 + round(y/40);
@@ -319,7 +326,8 @@ for(var i = 0; i < 150; i++) {
     var a = random(0, 4000);
     var b = random(0, 4000);
     var position = round(a/40)*100 + round(b/40);
-    while(grid[position] > avg - 1){
+    var num = generator.nextGaussian();
+    while(grid[position] > stdev*num + avg){
         a = random(0, 4000);
         b = random(0, 4000);
         position = round(a/40)*100 + round(b/40);
