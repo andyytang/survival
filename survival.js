@@ -128,12 +128,12 @@ var Inventory = function(x, y) {
 var inventory = new Inventory(500, 550);
 
 
-//Reference points for player testing
+//Smoke trees everyday
 var tree = function(x, y) {
     this.x = x;
     this.y = y;
     this.r = 40;
-    this.leaves = random(3, 5);
+    this.leaves = random(3, 5.5);
     this.draw = function() {
         noStroke();
         fill(11, 120, 18, 100);
@@ -142,7 +142,7 @@ var tree = function(x, y) {
         ellipse(this.x, this.y, this.r, this.r);
     };
     this.harvest = function()  {
-        this.r -= 8;
+        this.r -= (40/(floor(this.leaves)));
     };
 };
 var trees = [];
@@ -170,8 +170,6 @@ if (randomLength > 0) {
 for(var i = 0; i < randomLength; i++){
   this.berries.splice(floor(random(0, 1)*this.berries.length), 1);
 }
-} else {
-    this.randomBerries();
 }
     };
     this.draw = function() {
