@@ -158,7 +158,7 @@ trees.add = function(x, y) {
 trees.apply = function() {
     for(var i = 0; i < trees.length; i++) {
         trees[i].draw();
-         if (trees[i].r === 0) {
+         if (trees[i].r <= 0) {
             trees.splice(i, 1);
         }
     }
@@ -204,13 +204,38 @@ bushes.add = function(x, y) {
     bushes.push(new bush(x, y));
     
 };
-
-    
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
         bushes[i].draw();
     }
 };
+
+var HealthBar = function(x, y){
+    this.x = x;
+    this.y = y;
+};
+
+HealthBar.prototype.draw = function() {
+    strokeWeight(1);
+    rectMode(LEFT);
+    fill(250, 13, 13);
+    rect(this.x, this.y, 210, 12);
+};
+
+var healthBar = new HealthBar(225, 482);
+
+
+var FoodBar = function(x, y) {
+    this.x = x;
+    this.y = y;
+};
+
+FoodBar.prototype.draw = function() {
+    fill(230, 145, 10);
+    rect(this.x, this.y, 210, 12);
+};
+
+var foodBar = new FoodBar(330, 500);
 
 var player = function(x, y) {
     this.x = x;
@@ -219,6 +244,8 @@ var player = function(x, y) {
     this.yspeed = 0;
     this.r = 20;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
+    this.health = 100;
+    this.food = 100;
     this.speedLimit = 3;
     this.draw = function() {
         noStroke();
@@ -360,5 +387,7 @@ var draw = function() {
         Player.stats();
         rectMode(CENTER);
         inventory.draw();
+        foodBar.draw();
+        healthBar.draw();
     }
 };
