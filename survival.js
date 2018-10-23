@@ -89,6 +89,7 @@ var Camera = function(x, y) {
     };
 };
 
+
 /***
  * Simple function to find if the object is in view of the camera.
  * @param obj the object that is to be analysed
@@ -102,6 +103,29 @@ var view = function(obj){
 var collide = function(obj1, obj2) {
     return dist(obj1.x, obj1.y, obj2.x, obj2.y) < obj1.r/2 + obj2.r/2;
 };
+
+
+var Wood = function(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+};
+
+Wood.prototype.draw = function() {
+    noStroke();
+    pushMatrix();
+    translate(-83, 208);
+    rotate(-45);
+    fill(110, 53, 53);
+    rectMode(CENTER);
+    rect(this.x, this.y, this.size, this      .size*2);
+    ellipse(this.x, this.y+15, this.size-1     , this.size-5);
+    stroke(110, 53, 53);
+    fill(247, 195, 111);
+    ellipse(this.x, this.y-15, this.size-1     , this.size-5);
+    popMatrix();
+};
+
 
 //Displayed in reverse order (sorry but that's the best way it could be designed
 var obj_count = [0, 0, 0, 0, 0]; 
@@ -123,8 +147,20 @@ var Inventory = function(x, y) {
     var inc = 0;
     for (var i = 0; i < obj_count.length; i++) {
         if (obj_count[i] > 0) {
+            switch (i) {
+                case 0:
+                    var wood = new Wood(340, 825, 16);
+                    wood.draw();
+                    break;
+                default:
+                    
+                    break;
+            }
+            
             fill(255, 255, 255);
-            text(obj_count[i], 740 - 60 * inc, 570);
+            textSize(25);
+            text(obj_count[i], 740 - 60 * inc, 565);
+            
             inc++;
         }
     }
@@ -132,7 +168,6 @@ var Inventory = function(x, y) {
 };
 
 var inventory = new Inventory(500, 550);
-
 
 //Smoke trees everyday
 var tree = function(x, y) {
@@ -224,7 +259,6 @@ HealthBar.prototype.draw = function() {
 
 var healthBar = new HealthBar(225, 482);
 
-
 var FoodBar = function(x, y) {
     this.x = x;
     this.y = y;
@@ -236,6 +270,8 @@ FoodBar.prototype.draw = function() {
 };
 
 var foodBar = new FoodBar(330, 500);
+
+
 
 var player = function(x, y) {
     this.x = x;
@@ -297,6 +333,7 @@ var player = function(x, y) {
     };
     this.stats = function() {
         fill(0);
+        textSize(15);
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
         text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
     };
@@ -322,7 +359,8 @@ cam = new Camera(Player.x, Player.y);
 
 mouseClicked = function() {
     for (var i = 0; i < trees.length; i++) {
-        if (Player.collectTree(trees[i]) === true) {
+        //Hard max is 64 wood (for now, once you can have multiple stacks it will be fixed)
+        if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
             trees[i].harvest();
             obj_count[0]++;
         }
@@ -385,9 +423,13 @@ var draw = function() {
         Player.update();
         popMatrix();
         Player.stats();
+      
         rectMode(CENTER);
+        
         inventory.draw();
         foodBar.draw();
         healthBar.draw();
+        
+        
     }
 };
