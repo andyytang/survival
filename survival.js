@@ -31,6 +31,7 @@
 var Player;
 var cam;
 var mapsize = 4000;
+var togglemap = true;
 var keys = [];
 var generator = new Random(1);
 textFont(createFont("Candara"), 15);
@@ -60,7 +61,12 @@ stdev /= 10000;
 stdev = Math.sqrt(stdev);
 }
 //@KEY INTERACTION
-keyPressed = function(){keys[keyCode]=true;};
+keyPressed = function(){
+    keys[keyCode]=true;
+    if(keys[77]) {
+        togglemap = !togglemap;
+    }
+};
 keyReleased = function(){ keys[keyCode]=false; };
 
 /***
@@ -89,7 +95,6 @@ var Camera = function(x, y) {
     };
 };
 
-
 /***
  * Simple function to find if the object is in view of the camera.
  * @param obj the object that is to be analysed
@@ -104,14 +109,13 @@ var collide = function(obj1, obj2) {
     return dist(obj1.x, obj1.y, obj2.x, obj2.y) < obj1.r/2 + obj2.r/2;
 };
 
-
+//@WOOD
 var Wood = function(x, y, size) {
     this.x = x;
     this.y = y;
     this.size = size;
 };
-
-Wood.prototype.draw = function() {
+ Wood.prototype.draw = function() {
     noStroke();
     pushMatrix();
     translate(-83, 208);
@@ -147,6 +151,7 @@ var Inventory = function(x, y) {
     var inc = 0;
     for (var i = 0; i < obj_count.length; i++) {
         if (obj_count[i] > 0) {
+            fill(255, 255, 255);
             switch (i) {
                 case 0:
                     var wood = new Wood(340, 825, 16);
@@ -169,7 +174,66 @@ var Inventory = function(x, y) {
 
 var inventory = new Inventory(500, 550);
 
-//Smoke trees everyday
+var recipe = function(counts, desc) {
+    this.counts = counts;
+    this.desc = desc;
+    this.color = color(counts[0]*50, counts[1]*50, counts[2]*50);
+    this.isPossible = function() {
+        for(var i = 0; i < obj_count.length; i++) {
+            if(obj_count[i] < counts[i]) {
+                return false;
+            }
+        }
+        return true;
+    };
+    this.drawapply = function(x, y) {
+        stroke(this.color);
+        fill(this.color, 50);
+        rect(x, y, 40, 40, 3);
+        fill(0);
+        text(this.desc, x + 5, y + 20);
+    };
+};
+
+var recipes = [];
+recipes.add = function(counts, desc) {
+    recipes.push(new recipe(counts, desc));
+};
+recipes.apply = function(counts) {
+    var x1 = 20;
+    var y1 = 60;
+    for(var i = 0; i < recipes.length; i++) {
+        if(recipes[i].isPossible()) {
+            recipes[i].drawapply(x1, y1);
+            y1 += 50;
+        }
+    }
+};
+
+//@BARS
+var HealthBar = function(x, y){
+    this.x = x;
+    this.y = y;
+};
+ HealthBar.prototype.draw = function() {
+    strokeWeight(1);
+    rectMode(LEFT);
+    fill(250, 13, 13);
+    rect(this.x, this.y, 210, 12);
+};
+ var healthBar = new HealthBar(225, 482);
+ var FoodBar = function(x, y) {
+    this.x = x;
+    this.y = y;
+};
+ FoodBar.prototype.draw = function() {
+    fill(230, 145, 10);
+    rect(this.x, this.y, 210, 12);
+};
+ var foodBar = new FoodBar(330, 500);
+
+
+//Trees
 var tree = function(x, y) {
     this.x = x;
     this.y = y;
@@ -193,7 +257,7 @@ trees.add = function(x, y) {
 trees.apply = function() {
     for(var i = 0; i < trees.length; i++) {
         trees[i].draw();
-         if (trees[i].r <= 0) {
+         if (trees[i].r === 0) {
             trees.splice(i, 1);
         }
     }
@@ -239,39 +303,13 @@ bushes.add = function(x, y) {
     bushes.push(new bush(x, y));
     
 };
+
+    
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
         bushes[i].draw();
     }
 };
-
-var HealthBar = function(x, y){
-    this.x = x;
-    this.y = y;
-};
-
-HealthBar.prototype.draw = function() {
-    strokeWeight(1);
-    rectMode(LEFT);
-    fill(250, 13, 13);
-    rect(this.x, this.y, 210, 12);
-};
-
-var healthBar = new HealthBar(225, 482);
-
-var FoodBar = function(x, y) {
-    this.x = x;
-    this.y = y;
-};
-
-FoodBar.prototype.draw = function() {
-    fill(230, 145, 10);
-    rect(this.x, this.y, 210, 12);
-};
-
-var foodBar = new FoodBar(330, 500);
-
-
 
 var player = function(x, y) {
     this.x = x;
@@ -279,9 +317,9 @@ var player = function(x, y) {
     this.xspeed = 0;
     this.yspeed = 0;
     this.r = 20;
-    this.dir = atan2(this.y - mouseY, mouseX - this.x);
     this.health = 100;
     this.food = 100;
+    this.dir = atan2(this.y - mouseY, mouseX - this.x);
     this.speedLimit = 3;
     this.draw = function() {
         noStroke();
@@ -333,7 +371,6 @@ var player = function(x, y) {
     };
     this.stats = function() {
         fill(0);
-        textSize(15);
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
         text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
     };
@@ -359,8 +396,7 @@ cam = new Camera(Player.x, Player.y);
 
 mouseClicked = function() {
     for (var i = 0; i < trees.length; i++) {
-        //Hard max is 64 wood (for now, once you can have multiple stacks it will be fixed)
-        if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
+        if (Player.collectTree(trees[i]) === true) {
             trees[i].harvest();
             obj_count[0]++;
         }
@@ -405,31 +441,77 @@ for (var i = 0; i < bushes.length; i++){
 }
 
 
+
+
+recipes.add([0, 1, 0, 0, 0], "berry");
+recipes.add([3, 0, 0, 0, 0], "fire");
+recipes.add([4, 3, 0, 0, 0], "something");
 var scene = 0;
 var draw = function() {
     if(scene === 0) {
-        background(120, 180, 94);
-        rectMode(CORNER);
-        pushMatrix();
-        cam.view(Player);
-        stroke(255, 0, 0);
-        line(0, 0, mapsize, 0);
-        line(0, 0, 0, mapsize);
-        line(mapsize, 0, mapsize, mapsize);
-        line(0, mapsize, mapsize, mapsize);
-        bushes.apply();
-        Player.draw();
-        trees.apply();
-        Player.update();
-        popMatrix();
-        Player.stats();
-      
-        rectMode(CENTER);
-        
-        inventory.draw();
-        foodBar.draw();
-        healthBar.draw();
-        
-        
+        if(!togglemap) {
+            background(120, 180, 94);
+            rectMode(CORNER);
+            pushMatrix();
+            cam.view(Player);
+            stroke(255, 0, 0);
+            line(0, 0, mapsize, 0);
+            line(0, 0, 0, mapsize);
+            line(mapsize, 0, mapsize, mapsize);
+            line(0, mapsize, mapsize, mapsize);
+            bushes.apply();
+            Player.draw();
+            trees.apply();
+            Player.update();
+            popMatrix();
+            Player.stats();
+            rectMode(CENTER);
+            inventory.draw();
+            rectMode(CORNER);
+            recipes.apply();
+        }
+        if(togglemap) {
+            background(120, 180, 94);
+            rectMode(CORNER);
+            pushMatrix();
+            cam.view(Player);
+            stroke(255, 0, 0);
+            line(0, 0, mapsize, 0);
+            line(0, 0, 0, mapsize);
+            line(mapsize, 0, mapsize, mapsize);
+            line(0, mapsize, mapsize, mapsize);
+            bushes.apply();
+            Player.draw();
+            trees.apply();
+            popMatrix();
+            Player.stats();
+            rectMode(CENTER);
+            inventory.draw();
+            rectMode(CORNER);
+            recipes.apply();
+            for(var i = 0; i < 100; i++) {
+                for(var j = 0; j < 100; j++) {
+                    noStroke();
+                    fill(150 - round(grid[i*100 + j]/10)*10, round(grid[i*100 + j]/10)*10, 0);
+                    rect(i*4, j*4, 4, 4);
+                }
+            }
+            for(var i = 0; i < bushes.length; i++) {
+                stroke(255, 0, 0);
+                strokeWeight(2);
+                point(bushes[i].x/10, bushes[i].y/10);
+            }
+            for(var j = 0; j < trees.length; j++) {
+                stroke(0, 255, 0);
+                point(trees[j].x/10, trees[j].y/10);
+            }
+            pushMatrix();
+            fill(0, 0, 0);
+            noStroke();
+            translate(Player.x/20, Player.y/20);
+            rotate(Player.dir + 90);
+            triangle(0, -5, -3, 5, 3, 5);
+            popMatrix();
+        }
     }
 };
