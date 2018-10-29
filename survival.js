@@ -370,6 +370,8 @@ var player = function(x, y) {
     }*/
     };
     this.stats = function() {
+        
+        textSize(15);
         fill(0);
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
         text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
@@ -396,13 +398,13 @@ cam = new Camera(Player.x, Player.y);
 
 mouseClicked = function() {
     for (var i = 0; i < trees.length; i++) {
-        if (Player.collectTree(trees[i]) === true) {
+        if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
             trees[i].harvest();
             obj_count[0]++;
         }
     }
     for (var i = 0; i < bushes.length; i++) {
-        if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0) {
+        if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0  && obj_count[1] < 64) {
             bushes[i].harvest();
             obj_count[1]++;
         }
