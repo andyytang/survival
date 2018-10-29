@@ -31,7 +31,7 @@
 var Player;
 var cam;
 var mapsize = 4000;
-var togglemap = true;
+var togglemap = false;
 var keys = [];
 var generator = new Random(1);
 textFont(createFont("Candara"), 15);
@@ -131,21 +131,42 @@ var Wood = function(x, y, size) {
 };
 
 
+var Berries = function(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+};
+
+
+Berries.prototype.draw = function() {
+    stroke(0, 10, 130);
+    fill(0, 45, 255);
+    ellipse(this.x, this.y, this.size,        this.size);
+    ellipse(this.x+10, this.y+5, this.size     , this.size);
+    ellipse(this.x-3, this.y+11, this.size     , this.size);
+    noStroke();
+    fill(15, 10, 168);
+    ellipse(this.x-3, this.y-5, this.size     -11, this.size-11);
+    ellipse(this.x+15, this.y+2, this.size     -11, this.size-11);
+    ellipse(this.x-8, this.y+10, this.size     -11, this.size-11);
+};
+
 //Displayed in reverse order (sorry but that's the best way it could be designed
-var obj_count = [0, 0, 0, 0, 0]; 
+var obj_count = [1, 1, 0, 0, 0]; 
 
 /** Lynette's Inventory*/
 var Inventory = function(x, y) {
     this.x = x;
     this.y = y;
     this.draw = function() {
-         stroke(100, 100, 100);
+          stroke(100, 100, 100);
     fill(200, 200, 200);
-    rect(this.x, this.y, 555, 65);
+    rectMode(CENTER);
+    rect(this.x, this.y, 315, 65);
     stroke(60, 60, 60);
-    for(var i = 260; i < 750; i += 60) {
+    for(var i = 380; i < 650; i += 60) {
         fill(130, 130, 130);
-        rect(i, 550, 50, 50);
+        rect(i, this.y, 50, 50);
     }
     
     var inc = 0;
@@ -154,8 +175,12 @@ var Inventory = function(x, y) {
             fill(255, 255, 255);
             switch (i) {
                 case 0:
-                    var wood = new Wood(340, 825, 16);
+                    var wood = new Wood(257, 742, 16);
                     wood.draw();
+                    break;
+                case 1:
+                    var berries = new Berries(620 - 60 * inc, 546, 18);
+                    berries.draw();
                     break;
                 default:
                     
@@ -164,7 +189,7 @@ var Inventory = function(x, y) {
             
             fill(255, 255, 255);
             textSize(25);
-            text(obj_count[i], 740 - 60 * inc, 565);
+            text(obj_count[i], 620 - 60 * inc, 565);
             
             inc++;
         }
@@ -443,8 +468,6 @@ for (var i = 0; i < bushes.length; i++){
 }
 
 
-
-
 recipes.add([0, 1, 0, 0, 0], "berry");
 recipes.add([3, 0, 0, 0, 0], "fire");
 recipes.add([4, 3, 0, 0, 0], "something");
@@ -492,6 +515,8 @@ var draw = function() {
             Player.stats();
             rectMode(CENTER);
             inventory.draw();
+            foodBar.draw();
+            healthBar.draw();
             rectMode(CORNER);
             recipes.apply();
             for(var i = 0; i < 100; i++) {
@@ -517,9 +542,7 @@ var draw = function() {
             rotate(Player.dir + 90);
             triangle(0, -5, -3, 5, 3, 5);
             popMatrix();
-            rectMode(CENTER);
-            foodBar.draw();
-            healthBar.draw();
+
         }
     }
 };
