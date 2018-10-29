@@ -471,6 +471,9 @@ var draw = function() {
             inventory.draw();
             rectMode(CORNER);
             recipes.apply();
+            rectMode(CENTER);
+            foodBar.draw();
+            healthBar.draw();
         }
         if(togglemap) {
             background(120, 180, 94);
@@ -514,6 +517,9 @@ var draw = function() {
             rotate(Player.dir + 90);
             triangle(0, -5, -3, 5, 3, 5);
             popMatrix();
+            rectMode(CENTER);
+            foodBar.draw();
+            healthBar.draw();
         }
     }
 };
