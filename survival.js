@@ -510,7 +510,7 @@ var draw = function() {
             pushMatrix();
             fill(0, 0, 0);
             noStroke();
-            translate(Player.x/20, Player.y/20);
+            translate(Player.x/10, Player.y/10);
             rotate(Player.dir + 90);
             triangle(0, -5, -3, 5, 3, 5);
             popMatrix();
