@@ -31,7 +31,7 @@
 var Player;
 var cam;
 var mapsize = 4000;
-var togglemap = false;
+var togglemap = true;
 var keys = [];
 var generator = new Random(1);
 textFont(createFont("Candara"), 15);
@@ -60,8 +60,19 @@ for(var i = 0; i < grid.length; i++) {
 stdev /= 10000;
 stdev = Math.sqrt(stdev);
 }
+//@KEY INTERACTION
+{
+keyPressed = function(){
+    keys[keyCode]=true;
+    if(keys[77]) {
+        togglemap = !togglemap;
+    }
+};
+keyReleased = function(){ keys[keyCode]=false; };
+}
 
-
+//@CAMERA
+{
 /***
  * Basic camera function: A function to have a “camera” follow
  * the player’s field of view.
@@ -87,7 +98,9 @@ var Camera = function(x, y) {
         translate(width/2-this.x,height/2-this.y);
     };
 };
-
+}
+//@VIEW
+{
 /***
  * Simple function to find if the object is in view of the camera.
  * @param obj the object that is to be analysed
@@ -96,11 +109,14 @@ var view = function(obj){
     return obj.x+width/2-cam.x<width&&obj.x+width/2-cam.x>-obj.r&&
     obj.y+height/2-cam.y<height&&obj.y+height/2-cam.y>-obj.r;
 };
-
+}
+//@COLLIDE
+{
 //Radial based collide function
 var collide = function(obj1, obj2) {
     return dist(obj1.x, obj1.y, obj2.x, obj2.y) < obj1.r/2 + obj2.r/2;
 };
+}
 
 //@WOOD
 var Wood = function(x, y, size) {
@@ -123,15 +139,13 @@ var Wood = function(x, y, size) {
     popMatrix();
 };
 
-
+//@BERRIES
 var Berries = function(x, y, size) {
     this.x = x;
     this.y = y;
     this.size = size;
 };
-
-
-Berries.prototype.draw = function() {
+ Berries.prototype.draw = function() {
     stroke(0, 10, 130);
     fill(0, 45, 255);
     ellipse(this.x, this.y, this.size,        this.size);
@@ -144,6 +158,7 @@ Berries.prototype.draw = function() {
     ellipse(this.x-8, this.y+10, this.size     -11, this.size-11);
 };
 
+
 //Displayed in reverse order (sorry but that's the best way it could be designed
 var obj_count = [0, 0, 0, 0, 0]; 
 
@@ -153,54 +168,52 @@ var Inventory = function(x, y) {
     this.y = y;
     this.selected = 0;
     this.draw = function() {
-          stroke(100, 100, 100);
-    fill(200, 200, 200);
-    rectMode(CENTER);
-    rect(this.x, this.y, 315, 65);
-    stroke(60, 60, 60);
-    var pos = 0;
-    for(var i = 380; i < 650; i += 60) {
-        fill(130, 130, 130);
-        if (pos !== this.selected) {
-           stroke(100,100,100);
-           strokeWeight(1);
-        } else {
-            stroke(15,15,15);
-            strokeWeight(3);
-        }
-        rect(i, this.y, 50, 50);
-        pos++;
-    }
-    
-    var inc = 0;
-    for (var i = 0; i < obj_count.length; i++) {
-        if (obj_count[i] > 0) {
-            fill(255, 255, 255);
-            switch (i) {
-                case 0:
-                    var wood = new Wood(257, 742, 16);
-                    wood.draw();
-                    break;
-                case 1:
-                    var berries = new Berries(620 - 60 * inc, 546, 18);
-                    berries.draw();
-                    break;
-                default:
-                    
-                    break;
+         stroke(100, 100, 100);
+        fill(200, 200, 200);
+        rectMode(CENTER);
+        rect(this.x, this.y, 315, 65);
+        stroke(60, 60, 60);
+        var pos = 0;
+        for(var i = 380; i < 650; i += 60) {
+            if (pos !== this.selected) {
+                stroke(100,100,100);
+                strokeWeight(1);
+            } else {
+                stroke(15,15,15);
+                strokeWeight(3);
             }
-            
-            fill(255, 255, 255);
-            textSize(25);
-            text(obj_count[i], 620 - 60 * inc, 565);
-            
-            inc++;
+            rect(i, this.y, 50, 50);
+            pos++;
+            rect(i, 550, 50, 50);
         }
-    }
+        var inc = 0;
+        for (var i = 0; i < obj_count.length; i++) {
+            if (obj_count[i] > 0) {
+                fill(255, 255, 255);
+                switch (i) {
+                    case 0:
+                        var wood = new Wood(257, 742, 16);
+                        wood.draw();
+                        break;
+                    case 1:
+                        var berries = new Berries(620 - 60 * inc, 546, 18);
+                        berries.draw();
+                        break;
+                    default:
+                    
+                        break;
+                }
+            
+                fill(255, 255, 255);
+                textSize(25);
+                text(obj_count[i], 620 - 60 * inc, 565);
+            
+                inc++;
+            }
+        }
     };
 };
-
-var inventory = new Inventory(500, 550, 0);
+ var inventory = new Inventory(500, 550, 0);
 
 var recipe = function(counts, desc) {
     this.counts = counts;
@@ -245,7 +258,6 @@ var HealthBar = function(x, y){
 };
  HealthBar.prototype.draw = function() {
     strokeWeight(1);
-    stroke(0,0,0);
     rectMode(LEFT);
     fill(250, 13, 13);
     rect(this.x, this.y, 210, 12);
@@ -257,7 +269,6 @@ var HealthBar = function(x, y){
 };
  FoodBar.prototype.draw = function() {
     fill(230, 145, 10);
-    stroke(0,0,0);
     rect(this.x, this.y, 210, 12);
 };
  var foodBar = new FoodBar(450, 500);
@@ -287,8 +298,35 @@ trees.add = function(x, y) {
 trees.apply = function() {
     for(var i = 0; i < trees.length; i++) {
         trees[i].draw();
-         if (trees[i].r === 0) {
+         if (trees[i].r <= 0) {
             trees.splice(i, 1);
+        }
+    }
+};
+
+//@STONES
+var stone = function(x, y) {
+    this.x = x;
+    this.y = y;
+    this.r = 70;
+    this.draw = function() {
+        noStroke();
+        fill(100,100,100);
+        ellipse(this.x, this.y, this.r, this.r);
+    };
+    this.harvest = function()  {
+        this.r -= 2;
+    };
+};
+var stones = [];
+stones.add = function(x, y) {
+    stones.push(new stone(x, y));
+};
+stones.apply = function() {
+    for(var i = 0; i < stones.length; i++) {
+        stones[i].draw();
+        if (stones[i].r <= 0) {
+            stones.splice(i, 1);
         }
     }
 };
@@ -412,6 +450,9 @@ var player = function(x, y) {
     this.collectBush = function(bush){
         return abs(this.x - bush.x)*2 < (bush.r * 1.5) && abs(this.y - bush.y)*2 < (bush.r * 1.5);
     };
+    this.collectStone = function(stone){
+        return abs(this.x - stone.x)*2 < (stone.r * 1.5) && abs(this.y - stone.y)*2 < (stone.r * 1.5);
+    };
     this.applyCollision=function(obj,velx,vely){
         for(var i=0; i<obj.length; i++){
             if(collide(this,obj[i])){ // handle collisions
@@ -437,6 +478,12 @@ mouseClicked = function() {
         if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0  && obj_count[1] < 64) {
             bushes[i].harvest();
             obj_count[1]++;
+        }
+    }
+    for (var i = 0; i < stones.length; i++) {
+        if (Player.collectStone(stones[i]) === true && obj_count[2] < 64) {
+            stones[i].harvest();
+            obj_count[2]++;
         }
     }
 };
@@ -472,19 +519,13 @@ for (var i = 0; i < bushes.length; i++){
     bushes[i].randomBerries();
 }
 
-//@KEY INTERACTION
-keyPressed = function(){
-    keys[keyCode]=true;
-    if(keys[77]) {
-        togglemap = !togglemap;
-    }
-    for (var i = 48; i <= 52; i++){
-        if (keys[i]){
-            inventory.selected = i - 48;
-        }
-    }
-};
-keyReleased = function(){ keys[keyCode]=false; };
+for(var i = 0; i < 100; i++) {
+    var a = random(0, 4000);
+    var b = random(0, 4000);
+    
+    stones.add(a,b);
+}
+
 
 
 recipes.add([0, 1, 0, 0, 0], "berry");
@@ -506,17 +547,17 @@ var draw = function() {
             bushes.apply();
             Player.draw();
             trees.apply();
+            stones.apply();
             Player.update();
             popMatrix();
             Player.stats();
             rectMode(CENTER);
             inventory.draw();
-            healthBar.draw();
             rectMode(CORNER);
             recipes.apply();
             rectMode(CENTER);
             foodBar.draw();
-            
+            healthBar.draw();
         }
         if(togglemap) {
             background(120, 180, 94);
@@ -531,12 +572,11 @@ var draw = function() {
             bushes.apply();
             Player.draw();
             trees.apply();
+            stones.apply();
             popMatrix();
             Player.stats();
             rectMode(CENTER);
             inventory.draw();
-            foodBar.draw();
-            healthBar.draw();
             rectMode(CORNER);
             recipes.apply();
             for(var i = 0; i < 100; i++) {
@@ -555,6 +595,10 @@ var draw = function() {
                 stroke(0, 255, 0);
                 point(trees[j].x/10, trees[j].y/10);
             }
+            for(var j = 0; j < stones.length; j++) {
+                stroke(255, 255, 255);
+                point(stones[j].x/10, stones[j].y/10);
+            }
             pushMatrix();
             fill(0, 0, 0);
             noStroke();
@@ -562,6 +606,9 @@ var draw = function() {
             rotate(Player.dir + 90);
             triangle(0, -5, -3, 5, 3, 5);
             popMatrix();
+            rectMode(CENTER);
+            foodBar.draw();
+            healthBar.draw();
         }
     }
 };
