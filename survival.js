@@ -60,14 +60,7 @@ for(var i = 0; i < grid.length; i++) {
 stdev /= 10000;
 stdev = Math.sqrt(stdev);
 }
-//@KEY INTERACTION
-keyPressed = function(){
-    keys[keyCode]=true;
-    if(keys[77]) {
-        togglemap = !togglemap;
-    }
-};
-keyReleased = function(){ keys[keyCode]=false; };
+
 
 /***
  * Basic camera function: A function to have a “camera” follow
@@ -152,21 +145,31 @@ Berries.prototype.draw = function() {
 };
 
 //Displayed in reverse order (sorry but that's the best way it could be designed
-var obj_count = [1, 1, 0, 0, 0]; 
+var obj_count = [0, 0, 0, 0, 0]; 
 
 /** Lynette's Inventory*/
 var Inventory = function(x, y) {
     this.x = x;
     this.y = y;
+    this.selected = 0;
     this.draw = function() {
           stroke(100, 100, 100);
     fill(200, 200, 200);
     rectMode(CENTER);
     rect(this.x, this.y, 315, 65);
     stroke(60, 60, 60);
+    var pos = 0;
     for(var i = 380; i < 650; i += 60) {
         fill(130, 130, 130);
+        if (pos !== this.selected) {
+           stroke(100,100,100);
+           strokeWeight(1);
+        } else {
+            stroke(15,15,15);
+            strokeWeight(3);
+        }
         rect(i, this.y, 50, 50);
+        pos++;
     }
     
     var inc = 0;
@@ -197,7 +200,7 @@ var Inventory = function(x, y) {
     };
 };
 
-var inventory = new Inventory(500, 550);
+var inventory = new Inventory(500, 550, 0);
 
 var recipe = function(counts, desc) {
     this.counts = counts;
@@ -242,20 +245,22 @@ var HealthBar = function(x, y){
 };
  HealthBar.prototype.draw = function() {
     strokeWeight(1);
+    stroke(0,0,0);
     rectMode(LEFT);
     fill(250, 13, 13);
     rect(this.x, this.y, 210, 12);
 };
- var healthBar = new HealthBar(225, 482);
+ var healthBar = new HealthBar(345, 482);
  var FoodBar = function(x, y) {
     this.x = x;
     this.y = y;
 };
  FoodBar.prototype.draw = function() {
     fill(230, 145, 10);
+    stroke(0,0,0);
     rect(this.x, this.y, 210, 12);
 };
- var foodBar = new FoodBar(330, 500);
+ var foodBar = new FoodBar(450, 500);
 
 
 //Trees
@@ -467,6 +472,20 @@ for (var i = 0; i < bushes.length; i++){
     bushes[i].randomBerries();
 }
 
+//@KEY INTERACTION
+keyPressed = function(){
+    keys[keyCode]=true;
+    if(keys[77]) {
+        togglemap = !togglemap;
+    }
+    for (var i = 48; i <= 52; i++){
+        if (keys[i]){
+            inventory.selected = i - 48;
+        }
+    }
+};
+keyReleased = function(){ keys[keyCode]=false; };
+
 
 recipes.add([0, 1, 0, 0, 0], "berry");
 recipes.add([3, 0, 0, 0, 0], "fire");
@@ -492,11 +511,12 @@ var draw = function() {
             Player.stats();
             rectMode(CENTER);
             inventory.draw();
+            healthBar.draw();
             rectMode(CORNER);
             recipes.apply();
             rectMode(CENTER);
             foodBar.draw();
-            healthBar.draw();
+            
         }
         if(togglemap) {
             background(120, 180, 94);
@@ -542,7 +562,6 @@ var draw = function() {
             rotate(Player.dir + 90);
             triangle(0, -5, -3, 5, 3, 5);
             popMatrix();
-
         }
     }
 };
