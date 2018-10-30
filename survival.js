@@ -29,6 +29,7 @@
 //@GLOBAL VARIABLES
 {
 var Player;
+var inventory;
 var cam;
 var mapsize = 4000;
 var togglemap = true;
@@ -66,6 +67,12 @@ keyPressed = function(){
     keys[keyCode]=true;
     if(keys[77]) {
         togglemap = !togglemap;
+    }
+    
+    for (var i = 48; i <= 52; i++){
+        if (keys[i]){
+            inventory.selected = i - 48;
+        }
     }
 };
 keyReleased = function(){ keys[keyCode]=false; };
@@ -213,7 +220,7 @@ var Inventory = function(x, y) {
         }
     };
 };
- var inventory = new Inventory(500, 550, 0);
+inventory = new Inventory(500, 550, 0);
 
 var recipe = function(counts, desc) {
     this.counts = counts;
