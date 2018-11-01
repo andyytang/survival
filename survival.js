@@ -416,7 +416,7 @@ var player = function(x, y) {
         rect(342, 482, this.health*2.1, 12);
         fill(230, 145, 10, 100);
         rect(342, 500, 210, 12);
-        fill(230, 145, 10, 100);
+        fill(230, 145, 10);
         rect(342, 500, this.food*2.1, 12);
     };
     this.draw = function() {
