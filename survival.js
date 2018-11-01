@@ -261,7 +261,7 @@ var recipe = function(counts, desc, outpt, booleans) {
             rect(x, y, 200, 40, 3);
             fill(0);
             text(this.desc, x + 10, y + 27);
-            if(mouseIsPressed) {
+            if(mouseReleased()) {
                 for(var i = 0; i < obj_count.length; i++) {
                     obj_count[i] -= counts[i];
                 }
@@ -291,9 +291,6 @@ recipes.apply = function(counts) {
         }
     }
 };
-
-
-
 
 //Trees
 var tree = function(x, y) {
@@ -418,9 +415,9 @@ var player = function(x, y) {
         fill(250, 13, 13);
         rect(342, 482, this.health*2.1, 12);
         fill(230, 145, 10, 100);
-        rect(450, 500, 210, 12);
+        rect(342, 500, 210, 12);
         fill(230, 145, 10, 100);
-        rect(450, 500, this.food*2.1, 12);
+        rect(342, 500, this.food*2.1, 12);
     };
     this.draw = function() {
         noStroke();
