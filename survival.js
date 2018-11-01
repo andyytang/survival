@@ -239,6 +239,7 @@ var recipe = function(counts, desc, outpt, booleans) {
      * outpt[3] = any health?
     ***/
     this.outpt = outpt;
+    this.nomore = false;
     /***
      * Before I forget:
      * booleans[0] = need fire?
@@ -261,18 +262,21 @@ var recipe = function(counts, desc, outpt, booleans) {
             rect(x, y, 200, 40, 3);
             fill(0);
             text(this.desc, x + 10, y + 27);
-            if(mouseReleased()) {
+            if(mouseIsPressed && !this.nomore) {
                 for(var i = 0; i < obj_count.length; i++) {
                     obj_count[i] -= counts[i];
                 }
                 obj_count[outpt[1]] += outpt[0];
-                
+                this.nomore = true;
             }
         }
         else {
             stroke(this.color);
             fill(this.color, 50);
             rect(x, y, 40, 40, 3);
+        }
+        if(!mouseIsPressed) {
+            this.nomore = false;
         }
     };
 };
