@@ -170,6 +170,7 @@ var Berries = function(x, y, size) {
 var obj_count = [0, 0, 0, 0, 0];
 var obj_type = [];
 
+
 /** Lynette's Inventory*/
 var Inventory = function(x, y) {
     this.x = x;
@@ -182,7 +183,7 @@ var Inventory = function(x, y) {
         rect(this.x, this.y, 315, 65);
         var pos = 0;
         for(var i = 380; i < 650; i += 60) {
-              fill(130, 130, 130);
+            fill(130, 130, 130);
             if (pos !== this.selected) {
                 stroke(100,100,100);
                 strokeWeight(1);
@@ -192,8 +193,9 @@ var Inventory = function(x, y) {
             }
             rect(i, this.y, 50, 50);
             pos++;
+            rect(i, 550, 50, 50);
         }
-         strokeWeight(1);
+        strokeWeight(1);
         
         var inc = 0;
         for (var i = 0; i < obj_count.length; i++) {
@@ -224,24 +226,54 @@ var Inventory = function(x, y) {
 };
 inventory = new Inventory(500, 550, 0);
 
-var recipe = function(counts, desc) {
+//@RECIPE
+var recipe = function(counts, desc, outpt, booleans) {
     this.counts = counts;
     this.desc = desc;
-    this.color = color(counts[0]*50, counts[1]*50, counts[2]*50);
+    this.color = color(counts[0]*255/32, counts[1]*255/8, counts[2]*255/32);
+    /***
+     * Before I forget:
+     * outpt[0] = number of items
+     * outpt[1] = item type
+     * outpt[2] = any food?
+     * outpt[3] = any health?
+    ***/
+    this.outpt = outpt;
+    /***
+     * Before I forget:
+     * booleans[0] = need fire?
+     * booleans[1] = need crafting?
+    ***/
+    this.booleans = booleans;
     this.isPossible = function() {
         for(var i = 0; i < obj_count.length; i++) {
             if(obj_count[i] < counts[i]) {
                 return false;
             }
         }
+        //@TODO: IMPLEMENT CRAFTING AND FIRE DETECTION
         return true;
     };
     this.drawapply = function(x, y) {
-        stroke(this.color);
-        fill(this.color, 50);
-        rect(x, y, 40, 40, 3);
-        fill(0);
-        text(this.desc, x + 5, y + 20);
+        if(mouseX > x && mouseY > y && mouseX < x + 40 && mouseY < y + 40) {
+            stroke(this.color);
+            fill(this.color, 50);
+            rect(x, y, 200, 40, 3);
+            fill(0);
+            text(this.desc, x + 10, y + 27);
+            if(mouseIsPressed) {
+                for(var i = 0; i < obj_count.length; i++) {
+                    obj_count[i] -= counts[i];
+                }
+                obj_count[outpt[1]] += outpt[0];
+                
+            }
+        }
+        else {
+            stroke(this.color);
+            fill(this.color, 50);
+            rect(x, y, 40, 40, 3);
+        }
     };
 };
 
@@ -260,30 +292,7 @@ recipes.apply = function(counts) {
     }
 };
 
-//@BARS
-var HealthBar = function(x, y){
-    this.x = x;
-    this.y = y;
-};
- HealthBar.prototype.draw = function() {
-    strokeWeight(1);
-    rectMode(LEFT);
-    stroke(0,0,0);
-    fill(250, 13, 13);
-    rect(this.x, this.y, 210, 12);
-};
- var healthBar = new HealthBar(345, 482);
- var FoodBar = function(x, y) {
-    this.x = x;
-    this.y = y;
-};
- FoodBar.prototype.draw = function() {
-    
-    stroke(0,0,0);
-    fill(230, 145, 10);
-    rect(this.x, this.y, 210, 12);
-};
- var foodBar = new FoodBar(450, 500);
+
 
 
 //Trees
@@ -401,6 +410,18 @@ var player = function(x, y) {
     this.food = 100;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
     this.speedLimit = 3;
+    this.bars = function() {
+        rectMode(LEFT);
+        strokeWeight(1);
+        fill(250, 13, 13, 100);
+        rect(342, 482, 210, 12);
+        fill(250, 13, 13);
+        rect(342, 482, this.health*2.1, 12);
+        fill(230, 145, 10, 100);
+        rect(450, 500, 210, 12);
+        fill(230, 145, 10, 100);
+        rect(450, 500, this.food*2.1, 12);
+    };
     this.draw = function() {
         noStroke();
         fill(255, 224, 157);
@@ -479,8 +500,6 @@ var player = function(x, y) {
 Player = new player(2000, 2000);
 cam = new Camera(Player.x, Player.y);
 
-var index = 0;
-
 mouseClicked = function() {
     for (var i = 0; i < trees.length; i++) {
         if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
@@ -542,9 +561,9 @@ for(var i = 0; i < 100; i++) {
 
 
 
-recipes.add([0, 1, 0, 0, 0], "berry");
-recipes.add([3, 0, 0, 0, 0], "fire");
-recipes.add([4, 3, 0, 0, 0], "something");
+recipes.add([30, 0, 5, 0, 0], "fire");
+recipes.add([20, 0, 10, 0, 0], "crafting box");
+recipes.add([0, 3, 0, 0, 0], "wine");
 var scene = 0;
 var draw = function() {
     if(scene === 0) {
@@ -567,11 +586,10 @@ var draw = function() {
             Player.stats();
             rectMode(CENTER);
             inventory.draw();
-            healthBar.draw();
             rectMode(CORNER);
             recipes.apply();
             rectMode(CENTER);
-            foodBar.draw();
+            Player.bars();
         }
         if(togglemap) {
             background(120, 180, 94);
@@ -621,10 +639,7 @@ var draw = function() {
             triangle(0, -5, -3, 5, 3, 5);
             popMatrix();
             rectMode(CENTER);
-            strokeWeight(1);
-            stroke(0,0,0);
-            foodBar.draw();
-            healthBar.draw();
+            Player.bars();
         }
     }
 };
