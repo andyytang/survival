@@ -269,6 +269,12 @@ var recipe = function(counts, desc, outpt, booleans) {
                 obj_count[outpt[1]] += outpt[0];
                 Player.food += outpt[2];
                 Player.health += outpt[3];
+                if (Player.food > 100){
+                    Player.food = 100;
+                }
+                if (Player.health > 100){
+                    Player.health = 100;
+                }
                 this.nomore = true;
             }
         }
@@ -339,7 +345,7 @@ var stone = function(x, y) {
         ellipse(this.x, this.y, this.r, this.r);
     };
     this.harvest = function()  {
-        this.r -= 2;
+        this.r -= 14;
     };
 };
 var stones = [];
@@ -379,7 +385,7 @@ for(var i = 0; i < randomLength; i++){
             ellipse(this.x-9, this.y-15, this.r*0.7, this.r*0.7);
             
             for (var i = 0; i < this.berries.length; i++){
-               fill(247, 15, 15);
+                fill(15, 10, 168);
                ellipse(this.berries[i][0], this.berries[i][1], this.r/5, this.r/5);
             }
              }
@@ -416,6 +422,7 @@ var player = function(x, y) {
     this.bars = function() {
         rectMode(LEFT);
         strokeWeight(1);
+        stroke(0,0,0);
         fill(250, 13, 13, 100);
         rect(342, 482, 210, 12);
         fill(250, 13, 13);
@@ -431,8 +438,11 @@ var player = function(x, y) {
         pushMatrix();
         translate(this.x, this.y);
         rotate(this.dir);
-        ellipse(0, 0, this.r, this.r);
-        rect(0, 6, this.r, 5, 2);
+        stroke(125, 125, 125);
+        fill(255, 225, 160);
+        rect(2, 4, 13, 6, 3);
+        rect(2, -11, 13, 6, 3);
+        ellipse(0, 0, 23, 23);
         popMatrix();
         fill(0);
     };
@@ -573,7 +583,7 @@ for(var i = 0; i < 100; i++) {
     ***/
 recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 20], [false, false]);
 recipes.add([20, 0, 10, 0, 0], "crafting box", [1, 5, 0, 0, 0] , [false, false]);
-recipes.add([0, 3, 0, 0, 0], "wine", [0, 0, 20, 0], [false, false]);
+recipes.add([0, 3, 0, 0, 0], "wine", [0, 0, 5, 0], [false, false]);
 var scene = 0;
 var draw = function() {
     if(scene === 0) {
