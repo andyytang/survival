@@ -267,6 +267,8 @@ var recipe = function(counts, desc, outpt, booleans) {
                     obj_count[i] -= counts[i];
                 }
                 obj_count[outpt[1]] += outpt[0];
+                Player.food += outpt[2];
+                Player.health += outpt[3];
                 this.nomore = true;
             }
         }
@@ -282,8 +284,8 @@ var recipe = function(counts, desc, outpt, booleans) {
 };
 
 var recipes = [];
-recipes.add = function(counts, desc) {
-    recipes.push(new recipe(counts, desc));
+recipes.add = function(counts, desc, outpt, booleans) {
+    recipes.push(new recipe(counts, desc, outpt, booleans));
 };
 recipes.apply = function(counts) {
     var x1 = 20;
@@ -407,8 +409,8 @@ var player = function(x, y) {
     this.xspeed = 0;
     this.yspeed = 0;
     this.r = 20;
-    this.health = 100;
-    this.food = 100;
+    this.health = 50;
+    this.food = 50;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
     this.speedLimit = 3;
     this.bars = function() {
@@ -561,10 +563,17 @@ for(var i = 0; i < 100; i++) {
 }
 
 
-
-recipes.add([30, 0, 5, 0, 0], "fire");
-recipes.add([20, 0, 10, 0, 0], "crafting box");
-recipes.add([0, 3, 0, 0, 0], "wine");
+    /***
+     * Before I forget:
+     * outpt[0] = number of items
+     * outpt[1] = item type
+     * outpt[2] = any food?
+     * outpt[3] = any health?
+     * Need counts, desc, outpt, booleans
+    ***/
+recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 20], [false, false]);
+recipes.add([20, 0, 10, 0, 0], "crafting box", [1, 5, 0, 0, 0] , [false, false]);
+recipes.add([0, 3, 0, 0, 0], "wine", [0, 0, 20, 0], [false, false]);
 var scene = 0;
 var draw = function() {
     if(scene === 0) {
