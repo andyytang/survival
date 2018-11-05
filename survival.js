@@ -134,15 +134,14 @@ var Wood = function(x, y, size) {
  Wood.prototype.draw = function() {
     noStroke();
     pushMatrix();
-    translate(-83, 208);
+    translate(this.x, this.y);
     rotate(-45);
     fill(110, 53, 53);
-    rectMode(CENTER);
-    rect(this.x, this.y, this.size, this      .size*2);
-    ellipse(this.x, this.y+15, this.size-1     , this.size-5);
+    rect(0, 0, this.size, this.size*2);
+    ellipse(0, 15, this.size-1, this.size-5);
     stroke(110, 53, 53);
     fill(247, 195, 111);
-    ellipse(this.x, this.y-15, this.size-1     , this.size-5);
+    ellipse(0, -15, this.size-1, this.size-5);
     popMatrix();
 };
 
@@ -168,7 +167,7 @@ var Berries = function(x, y, size) {
 
 //The actual inventory
 var obj_count = [0, 0, 0, 0, 0];
-var obj_type = [];
+var obj_order = [];
 
 
 /** Lynette's Inventory*/
@@ -198,12 +197,12 @@ var Inventory = function(x, y) {
         strokeWeight(1);
         
         var inc = 0;
-        for (var i = 0; i < obj_count.length; i++) {
-            if (obj_count[i] > 0) {
+        for (var i = 0; i < obj_order.length; i++) {
+            if (obj_count[obj_order[i]] > 0) {
                 fill(255, 255, 255);
-                switch (i) {
+                switch (obj_order[i]) {
                     case 0:
-                        var wood = new Wood(87, 570, 16);
+                        var wood = new Wood(380 + 60 * inc, 550, 16);
                         wood.draw();
                         break;
                     case 1:
@@ -211,7 +210,6 @@ var Inventory = function(x, y) {
                         berries.draw();
                         break;
                     default:
-                    
                         break;
                 }
             
@@ -393,7 +391,6 @@ for(var i = 0; i < randomLength; i++){
     };
     this.harvest = function()  {
         this.berries.splice(floor(random(0,1)*this.berries.length), 1);
-       
     };
 };
 var bushes = [];
@@ -401,7 +398,6 @@ bushes.add = function(x, y) {
     bushes.push(new bush(x, y));
     
 };
-
     
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
@@ -518,18 +514,27 @@ mouseClicked = function() {
         if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
             trees[i].harvest();
             obj_count[0]++;
+            if (obj_count[0] === 1){
+                obj_order.push(0);
+            }
         }
     }
     for (var i = 0; i < bushes.length; i++) {
         if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0  && obj_count[1] < 64) {
             bushes[i].harvest();
             obj_count[1]++;
+            if (obj_count[1] === 1){
+                obj_order.push(1);
+            }
         }
     }
     for (var i = 0; i < stones.length; i++) {
         if (Player.collectStone(stones[i]) === true && obj_count[2] < 64) {
             stones[i].harvest();
             obj_count[2]++;
+            if (obj_count[2] === 1){
+                obj_order.push(2);
+            }
         }
     }
 };
