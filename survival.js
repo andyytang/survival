@@ -169,7 +169,6 @@ var Berries = function(x, y, size) {
 var obj_count = [0, 0, 0, 0, 0];
 var obj_order = [];
 
-
 /** Lynette's Inventory*/
 var Inventory = function(x, y) {
     this.x = x;
@@ -212,11 +211,9 @@ var Inventory = function(x, y) {
                     default:
                         break;
                 }
-            
                 fill(255, 255, 255);
                 textSize(25);
-                text(obj_count[i], 377 + 60 * inc, 565);
-            
+                text(obj_count[obj_order[i]], 377 + 60 * inc, 565);
                 inc++;
             }
         }
@@ -531,10 +528,10 @@ mouseClicked = function() {
     for (var i = 0; i < stones.length; i++) {
         if (Player.collectStone(stones[i]) === true && obj_count[2] < 64) {
             stones[i].harvest();
-            obj_count[2]++;
-            if (obj_count[2] === 1){
+            if (obj_count[2] === 0){
                 obj_order.push(2);
             }
+            obj_count[2]++;
         }
     }
 };
