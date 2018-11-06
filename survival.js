@@ -99,7 +99,6 @@ var Camera = function(x, y) {
     this.view = function(plyer){
         this.x=plyer.x;
         this.y=plyer.y;
-        
         this.x = constrain(this.x,this.w/2 - 100,mapsize-this.w/2 + 100);
         this.y = constrain(this.y,this.h/2 - 100,mapsize-this.h/2 + 100);
         translate(width/2-this.x,height/2-this.y);
@@ -194,10 +193,14 @@ var Inventory = function(x, y) {
             rect(i, 550, 50, 50);
         }
         strokeWeight(1);
-        
+        for (var n = 0; n < obj_count.length; n++){
+            if (obj_count[n] > 0 && obj_order.includes(n) === false){
+                obj_order.push(n);
+            }
+        }
         var inc = 0;
+        
         for (var i = 0; i < obj_order.length; i++) {
-            if (obj_count[obj_order[i]] > 0) {
                 fill(255, 255, 255);
                 switch (obj_order[i]) {
                     case 0:
@@ -215,8 +218,13 @@ var Inventory = function(x, y) {
                 textSize(25);
                 text(obj_count[obj_order[i]], 377 + 60 * inc, 565);
                 inc++;
+            if (obj_count[obj_order[i]] === 0) {
+                obj_order.splice(i, 1);
             }
+            
         }
+       
+        
     };
 };
 inventory = new Inventory(500, 550, 0);
@@ -511,26 +519,17 @@ mouseClicked = function() {
         if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
             trees[i].harvest();
             obj_count[0]++;
-            if (obj_count[0] === 1){
-                obj_order.push(0);
-            }
         }
     }
     for (var i = 0; i < bushes.length; i++) {
         if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0  && obj_count[1] < 64) {
             bushes[i].harvest();
             obj_count[1]++;
-            if (obj_count[1] === 1){
-                obj_order.push(1);
-            }
         }
     }
     for (var i = 0; i < stones.length; i++) {
         if (Player.collectStone(stones[i]) === true && obj_count[2] < 64) {
             stones[i].harvest();
-            if (obj_count[2] === 0){
-                obj_order.push(2);
-            }
             obj_count[2]++;
         }
     }
