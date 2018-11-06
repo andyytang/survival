@@ -416,6 +416,7 @@ var player = function(x, y) {
     this.xspeed = 0;
     this.yspeed = 0;
     this.r = 20;
+    this.interval = 0;
     this.health = 50;
     this.food = 50;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
@@ -484,8 +485,14 @@ var player = function(x, y) {
         pr = 90;
     }*/
     };
+    this.starve = function(){
+        this.interval++;
+        if (this.interval === 300){
+            this.food -= 3;
+            this.interval = 0;
+        }
+    };
     this.stats = function() {
-        
         textSize(15);
         fill(0);
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
@@ -603,6 +610,7 @@ var draw = function() {
             trees.apply();
             stones.apply();
             Player.update();
+            Player.starve();
             popMatrix();
             Player.stats();
             rectMode(CENTER);
