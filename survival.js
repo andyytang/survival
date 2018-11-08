@@ -22,8 +22,8 @@
  * 0 = wood
  * 1 = berry (WIP)
  * 2 = stone (WIP)
- * 3 = crafting box (WIP)
- *
+ * 3 = pickaxe (WIP)
+ * 4 = campfire
  * */
 
 //@GLOBAL VARIABLES
@@ -123,6 +123,47 @@ var collide = function(obj1, obj2) {
     return dist(obj1.x, obj1.y, obj2.x, obj2.y) < obj1.r/2 + obj2.r/2;
 };
 }
+//@SmallFire
+var SmallFire = function(x, y) {
+    this.x = x;
+    this.y = y;
+};
+ SmallFire.prototype.draw = function() {
+     for(var i = 0; i < 360; i += 36) {
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(i);
+    noStroke();
+    fill(92, 46, 4);
+    rect(-20, -3, 30, 5);
+    popMatrix();
+    }
+    
+    fill(255, 0, 0);
+    rectMode(CENTER);
+    rect(this.x, this.y, 19, 19);
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(45);
+    rect(0, 0, 19, 19);
+    popMatrix();
+    
+    fill(255, 125, 0);
+    rect(this.x, this.y, 14, 14);
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(45);
+    rect(0, 0, 14, 14);
+    popMatrix();
+    
+    fill(255, 205, 0);
+    rect(this.x, this.y, 8, 8);
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(45);
+    rect(0, 0, 8, 8);
+    popMatrix();
+};
 
 //@WOOD
 var Wood = function(x, y, size) {
@@ -175,47 +216,6 @@ var Berries = function(x, y, size) {
     ellipse(this.x-3, this.y-5, this.size     -11, this.size-11);
     ellipse(this.x+15, this.y+2, this.size     -11, this.size-11);
     ellipse(this.x-8, this.y+10, this.size     -11, this.size-11);
-};
-var SmallFire = function(x, y) {
-    this.x = x;
-    this.y = y;
-};
-
-SmallFire.prototype.draw = function() {
-     for(var i = 0; i < 360; i += 36) {
-    pushMatrix();
-    translate(this.x, this.y);
-    rotate(i);
-    noStroke();
-    fill(92, 46, 4);
-    rect(-20, -3, 30, 5);
-    popMatrix();
-    }
-    
-    fill(255, 0, 0);
-    rectMode(CENTER);
-    rect(this.x, this.y, 19, 19);
-    pushMatrix();
-    translate(this.x, this.y);
-    rotate(45);
-    rect(0, 0, 19, 19);
-    popMatrix();
-    
-    fill(255, 125, 0);
-    rect(this.x, this.y, 14, 14);
-    pushMatrix();
-    translate(this.x, this.y);
-    rotate(45);
-    rect(0, 0, 14, 14);
-    popMatrix();
-    
-    fill(255, 205, 0);
-    rect(this.x, this.y, 8, 8);
-    pushMatrix();
-    translate(this.x, this.y);
-    rotate(45);
-    rect(0, 0, 8, 8);
-    popMatrix();
 };
 
 
@@ -309,12 +309,13 @@ var recipe = function(counts, desc, outpt, booleans) {
     ***/
     this.booleans = booleans;
     this.isPossible = function() {
-        for(var i = 0; i < obj_count.length; i++) {
+        for(var i = 0; i < counts.length; i++) {
             if(obj_count[i] < counts[i]) {
                 return false;
             }
         }
         //@TODO: IMPLEMENT CRAFTING AND FIRE DETECTION
+        
         return true;
     };
     this.drawapply = function(x, y) {
@@ -363,6 +364,17 @@ recipes.apply = function(counts) {
             recipes[i].drawapply(x1, y1);
             y1 += 50;
         }
+    }
+};
+
+
+var fires = [];
+fires.add = function(x, y){
+    fires.push(new SmallFire(x, y));
+};
+fires.apply = function(){
+     for(var i = 0; i < fires.length; i++) {
+        fires[i].draw();
     }
 };
 
@@ -468,15 +480,6 @@ bushes.apply = function() {
         bushes[i].draw();
     }
 };
-var fires = [];
-fires.add = function(x, y){
-    fires.push(new SmallFire(x, y));
-};
-fires.apply = function(){
-     for(var i = 0; i < fires.length; i++) {
-        fires[i].draw();
-    }
-};
 
 var player = function(x, y) {
     this.x = x;
@@ -504,8 +507,8 @@ var player = function(x, y) {
     };
     this.draw = function() {
         noStroke();
-        fill(255, 224, 157);
         rectMode(CORNER);
+        fill(255, 224, 157);
         pushMatrix();
         translate(this.x, this.y);
         rotate(this.dir);
@@ -610,19 +613,18 @@ mouseClicked = function() {
         }
     }
     for (var i = 0; i < stones.length; i++) {
-        if (Player.collectStone(stones[i]) === true && obj_count[2] < 64) {
+        if (Player.collectStone(stones[i]) === true && obj_count[2] < 64 && obj_count[4] > 0 && obj_order[inventory.selected] === 4) {
             stones[i].harvest();
             obj_count[2]++;
         }
     }
+    
+
     if (obj_count[4] > 0 && inventory.selected === obj_order.indexOf(4)){
        fires.add(Player.x, Player.y);
        obj_count[4]--;
     }
 };
-
-
-
 
 for(var i = 0; i < 450; i++) {
     var x = random(0, 4000);
@@ -671,9 +673,9 @@ for(var i = 0; i < 100; i++) {
      * outpt[3] = any health?
      * Need counts, desc, outpt, booleans
     ***/
-recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 20], [false, false]);
-recipes.add([20, 0, 10, 0, 0], "crafting box", [1, 5, 0, 0, 0] , [false, false]);
-recipes.add([0, 3, 0, 0, 0], "wine", [0, 0, 5, 0], [false, false]);
+recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 4, 0, 0], [false, false]);
+recipes.add([30, 0, 5, 0, 0], "fire", [1, 3, 0, 20], [false, false]);
+recipes.add([0, 1, 0, 0, 0], "eat food", [0, 0, 4, 0], [false, false]);
 var scene = 0;
 var draw = function() {
     if(scene === 0) {
@@ -688,7 +690,6 @@ var draw = function() {
             line(mapsize, 0, mapsize, mapsize);
             line(0, mapsize, mapsize, mapsize);
             bushes.apply();
-            fires.apply();
             Player.draw();
             trees.apply();
             stones.apply();
@@ -761,6 +762,7 @@ var draw = function() {
     if (scene === 1){
         background(0,0,0);
         textSize(30);
-        text("GAME OVER.  Wow ur bad. Smoke weed everyday", 500, 100);
+        rectMode(CENTER);
+        text("GAME OVER", 500, 200);
     }
 };
