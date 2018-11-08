@@ -144,6 +144,20 @@ var Wood = function(x, y, size) {
     popMatrix();
 };
 
+var StoneItem = function(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+};
+
+StoneItem.prototype.draw = function() {
+    strokeWeight(1);
+    stroke(33, 33, 33);
+    fill(100, 100, 100);
+    ellipse(this.x, this.y, this.size,        this.size);
+    ellipse(this.x+13, this.y+7, this.size     -13, this.size-13);
+};
+
 //@BERRIES
 var Berries = function(x, y, size) {
     this.x = x;
@@ -210,6 +224,10 @@ var Inventory = function(x, y) {
                     case 1:
                         var berries = new Berries(380 + 60 * inc, 546, 18);
                         berries.draw();
+                        break;
+                    case 2:
+                        var stoneItem = new StoneItem(380 + 60 * inc, 550, 30);
+                        stoneItem.draw();
                         break;
                     default:
                         break;
@@ -451,7 +469,6 @@ var player = function(x, y) {
     this.update = function() {
         if(keys[UP] || keys[87]) {
             this.yspeed -= 0.1;
-            
         }
         if (keys[DOWN] || keys[83]) {
             this.yspeed += 0.1;
@@ -487,8 +504,13 @@ var player = function(x, y) {
     };
     this.starve = function(){
         this.interval++;
-        if (this.interval === 300){
-            this.food -= 3;
+        if (this.interval === 500){
+            if (this.food !== 0){
+                this.food -= 5;
+            }
+            if (this.food < 20){
+                this.health -= (20 - this.food)/4;
+            }
             this.interval = 0;
         }
     };
@@ -521,6 +543,8 @@ var player = function(x, y) {
 Player = new player(2000, 2000);
 cam = new Camera(Player.x, Player.y);
 
+var placeable = false;
+
 mouseClicked = function() {
     for (var i = 0; i < trees.length; i++) {
         if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
@@ -539,6 +563,10 @@ mouseClicked = function() {
             stones[i].harvest();
             obj_count[2]++;
         }
+    }
+    
+    if (obj_count[3] > 0 && inventory.selected === obj_order.indexOf(3)){
+       println("campfire");
     }
 };
 
@@ -619,6 +647,9 @@ var draw = function() {
             recipes.apply();
             rectMode(CENTER);
             Player.bars();
+            if (Player.health <= 0){
+                scene = 1;
+            }
         }
         if(togglemap) {
             background(120, 180, 94);
@@ -670,5 +701,10 @@ var draw = function() {
             rectMode(CENTER);
             Player.bars();
         }
+    }
+    if (scene === 1){
+        background(0,0,0);
+        textSize(30);
+        text("GAME OVER.  Wow ur bad. Smoke weed everyday", 500, 100);
     }
 };
