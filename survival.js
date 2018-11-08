@@ -176,6 +176,47 @@ var Berries = function(x, y, size) {
     ellipse(this.x+15, this.y+2, this.size     -11, this.size-11);
     ellipse(this.x-8, this.y+10, this.size     -11, this.size-11);
 };
+var SmallFire = function(x, y) {
+    this.x = x;
+    this.y = y;
+};
+
+SmallFire.prototype.draw = function() {
+     for(var i = 0; i < 360; i += 36) {
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(i);
+    noStroke();
+    fill(92, 46, 4);
+    rect(-20, -3, 30, 5);
+    popMatrix();
+    }
+    
+    fill(255, 0, 0);
+    rectMode(CENTER);
+    rect(this.x, this.y, 19, 19);
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(45);
+    rect(0, 0, 19, 19);
+    popMatrix();
+    
+    fill(255, 125, 0);
+    rect(this.x, this.y, 14, 14);
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(45);
+    rect(0, 0, 14, 14);
+    popMatrix();
+    
+    fill(255, 205, 0);
+    rect(this.x, this.y, 8, 8);
+    pushMatrix();
+    translate(this.x, this.y);
+    rotate(45);
+    rect(0, 0, 8, 8);
+    popMatrix();
+};
 
 
 //The actual inventory
@@ -427,6 +468,15 @@ bushes.apply = function() {
         bushes[i].draw();
     }
 };
+var fires = [];
+fires.add = function(x, y){
+    fires.push(new SmallFire(x, y));
+};
+fires.apply = function(){
+     for(var i = 0; i < fires.length; i++) {
+        fires[i].draw();
+    }
+};
 
 var player = function(x, y) {
     this.x = x;
@@ -455,6 +505,7 @@ var player = function(x, y) {
     this.draw = function() {
         noStroke();
         fill(255, 224, 157);
+        rectMode(CORNER);
         pushMatrix();
         translate(this.x, this.y);
         rotate(this.dir);
@@ -564,11 +615,14 @@ mouseClicked = function() {
             obj_count[2]++;
         }
     }
-    
-    if (obj_count[3] > 0 && inventory.selected === obj_order.indexOf(3)){
-       println("campfire");
+    if (obj_count[4] > 0 && inventory.selected === obj_order.indexOf(4)){
+       fires.add(Player.x, Player.y);
+       obj_count[4]--;
     }
 };
+
+
+
 
 for(var i = 0; i < 450; i++) {
     var x = random(0, 4000);
@@ -634,6 +688,7 @@ var draw = function() {
             line(mapsize, 0, mapsize, mapsize);
             line(0, mapsize, mapsize, mapsize);
             bushes.apply();
+            fires.apply();
             Player.draw();
             trees.apply();
             stones.apply();
@@ -665,6 +720,7 @@ var draw = function() {
             Player.draw();
             trees.apply();
             stones.apply();
+            fires.apply();
             popMatrix();
             Player.stats();
             rectMode(CENTER);
