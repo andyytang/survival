@@ -20,8 +20,8 @@
 /**
  * Key - (index of array is its id, deprecated id array)
  * 0 = wood
- * 1 = berry (WIP)
- * 2 = stone (WIP)
+ * 1 = berry
+ * 2 = stone
  * 3 = pickaxe (WIP)
  * 4 = campfire
  * */
@@ -165,6 +165,30 @@ var SmallFire = function(x, y) {
     popMatrix();
 };
 
+var Pickaxe = function(x, y){
+    this.x = x;
+    this.y = y;
+};
+
+Pickaxe.prototype.draw = function() {
+    rectMode(LEFT);
+    noStroke();
+    fill(110, 53, 53);
+    rect(this.x, this.y, 5, 35);
+    
+    stroke(130, 130, 130);
+    fill(200, 200, 200);
+    rect(this.x-5, this.y, 15, 6);
+
+    triangle(this.x-5, this.y, this.x-5, this.y+7, this.x-19, this.y+12);
+    triangle(this.x+10, this.y, this.x+10, this.y+7, this.x+24, this.y+12);
+    strokeWeight(2);
+    stroke(200, 200, 200);
+    line(this.x-5, this.y+1.5, this.x-5, this.y+4);
+    line(this.x+10, this.y+1.5, this.x+10, this.y+4);
+    strokeWeight(1);
+};
+
 //@WOOD
 var Wood = function(x, y, size) {
     this.x = x;
@@ -218,9 +242,21 @@ var Berries = function(x, y, size) {
     ellipse(this.x-8, this.y+10, this.size     -11, this.size-11);
 };
 
-
-//The actual inventory
-var obj_count = [0, 0, 0, 0, 0];
+/**
+ * Key to the Inventory:
+ * - 0 - wood
+ * - 1 - berries
+ * - 2 - stone
+ * - 3 - pickaxe (wood)
+ * - 4 - small fire
+ * - 5 - pickaxe (stone) - wip
+ * 
+ * @TODO:
+ * Make > 64 stack size, have multiple stacks
+ * 
+ * 
+ * */
+var obj_count = [0, 0, 0, 0, 0, 0, 0];
 var obj_order = [];
 
 /** Lynette's Inventory*/
@@ -270,6 +306,10 @@ var Inventory = function(x, y) {
                         var stoneItem = new StoneItem(380 + 60 * inc, 550, 30);
                         stoneItem.draw();
                         break;
+                    case 3:
+                        var pickaxe = new Pickaxe(378 + 60 * inc, 533);
+                        pickaxe.draw();
+                        break;
                     default:
                         break;
                 }
@@ -314,7 +354,6 @@ var recipe = function(counts, desc, outpt, booleans) {
                 return false;
             }
         }
-        //@TODO: IMPLEMENT CRAFTING AND FIRE DETECTION
         
         return true;
     };
@@ -613,13 +652,11 @@ mouseClicked = function() {
         }
     }
     for (var i = 0; i < stones.length; i++) {
-        if (Player.collectStone(stones[i]) === true && obj_count[2] < 64 && obj_count[4] > 0 && obj_order[inventory.selected] === 4) {
+        if (Player.collectStone(stones[i]) === true && obj_count[2] < 64 && obj_count[3] > 0 && obj_order[inventory.selected] === 3) {
             stones[i].harvest();
             obj_count[2]++;
         }
     }
-    
-
     if (obj_count[4] > 0 && inventory.selected === obj_order.indexOf(4)){
        fires.add(Player.x, Player.y);
        obj_count[4]--;
@@ -673,8 +710,8 @@ for(var i = 0; i < 100; i++) {
      * outpt[3] = any health?
      * Need counts, desc, outpt, booleans
     ***/
-recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 4, 0, 0], [false, false]);
-recipes.add([30, 0, 5, 0, 0], "fire", [1, 3, 0, 20], [false, false]);
+recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 3, 0, 0], [false, false]);
+recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 20], [false, false]);
 recipes.add([0, 1, 0, 0, 0], "eat food", [0, 0, 4, 0], [false, false]);
 var scene = 0;
 var draw = function() {
@@ -693,6 +730,7 @@ var draw = function() {
             Player.draw();
             trees.apply();
             stones.apply();
+            fires.apply();
             Player.update();
             Player.starve();
             popMatrix();
