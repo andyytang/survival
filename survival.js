@@ -186,7 +186,6 @@ Pickaxe.prototype.draw = function() {
     stroke(200, 200, 200);
     line(this.x-5, this.y+1.5, this.x-5, this.y+4);
     line(this.x+10, this.y+1.5, this.x+10, this.y+4);
-    strokeWeight(1);
 };
 
 //@WOOD
@@ -197,6 +196,7 @@ var Wood = function(x, y, size) {
 };
  Wood.prototype.draw = function() {
     noStroke();
+    rectMode(CENTER);
     pushMatrix();
     translate(this.x, this.y);
     rotate(-45);
@@ -242,21 +242,9 @@ var Berries = function(x, y, size) {
     ellipse(this.x-8, this.y+10, this.size     -11, this.size-11);
 };
 
-/**
- * Key to the Inventory:
- * - 0 - wood
- * - 1 - berries
- * - 2 - stone
- * - 3 - pickaxe (wood)
- * - 4 - small fire
- * - 5 - pickaxe (stone) - wip
- * 
- * @TODO:
- * Make > 64 stack size, have multiple stacks
- * 
- * 
- * */
-var obj_count = [0, 0, 0, 0, 0, 0, 0];
+
+//The actual inventory
+var obj_count = [0, 0, 0, 0, 0];
 var obj_order = [];
 
 /** Lynette's Inventory*/
@@ -525,6 +513,7 @@ var player = function(x, y) {
     this.y = y;
     this.xspeed = 0;
     this.yspeed = 0;
+    this.speedIncrement = 0.1;
     this.r = 20;
     this.interval = 0;
     this.health = 50;
@@ -556,21 +545,41 @@ var player = function(x, y) {
         rect(2, 4, 13, 6, 3);
         rect(2, -11, 13, 6, 3);
         ellipse(0, 0, 23, 23);
-        popMatrix();
+        if (obj_order[inventory.selected] === 3){
+        var pickX = 8;
+        var pickY = 5;
+        stroke(130, 130, 130);
+        fill(200, 200, 200);
+        triangle(pickX+5, pickY, pickX+5, pickY+6, pickX-4, pickY+2.5);
+        triangle(pickX+11, pickY, pickX+11, pickY+6, pickX+20, pickY+2.5);
+        rect(pickX+4, pickY, 7, 5);
+        stroke(200, 200, 200);
+        line(pickX+4, pickY+2, pickX+4, pickY+4);
+        line(pickX+11, pickY+1, pickX+11, pickY+4);
+        }
         fill(0);
+        stroke(0);
+        popMatrix();
     };
     this.update = function() {
+        if (keys[16]){
+            this.speedIncrement = 0.15;
+            this.speedLimit = 4;
+        } else {
+            this.speedIncrement = 0.1;
+            this.speedLimit = 3;
+        }
         if(keys[UP] || keys[87]) {
-            this.yspeed -= 0.1;
+            this.yspeed -= this.speedIncrement;
         }
         if (keys[DOWN] || keys[83]) {
-            this.yspeed += 0.1;
+            this.yspeed += this.speedIncrement;
         }
         if(keys[LEFT] || keys[65]){
-            this.xspeed -= 0.1;
+            this.xspeed -= this.speedIncrement;
         }
         if(keys[RIGHT] || keys[68]) {
-            this.xspeed += 0.1;
+            this.xspeed += this.speedIncrement;
         }
         this.x += this.xspeed;
         this.applyCollision(trees, this.xspeed, 0);
@@ -583,21 +592,13 @@ var player = function(x, y) {
         this.dir = atan2(mouseY - height/2, mouseX - width/2);
         this.xspeed = constrain(this.xspeed, -1*this.speedLimit, this.speedLimit);
         this.yspeed = constrain(this.yspeed, -1*this.speedLimit, this.speedLimit);
-       /* this.x += cos(this.dir)*this.speed;
-        this.y += sin(this.dir)*this.speed;*/
-        
-        /*if (keys[UP] || keys[87]) {
-            screeny += pagil;
-            pr = 90;
-    }
-    if (keys[DOWN] || keys[83]) {
-        screeny -= pagil;
-        pr = 90;
-    }*/
     };
     this.starve = function(){
+        if (this.speedLimit === 4){
+            this.interval += 5;
+        }
         this.interval++;
-        if (this.interval === 500){
+        if (this.interval >= 500){
             if (this.food !== 0){
                 this.food -= 5;
             }
@@ -712,7 +713,7 @@ for(var i = 0; i < 100; i++) {
     ***/
 recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 3, 0, 0], [false, false]);
 recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 20], [false, false]);
-recipes.add([0, 1, 0, 0, 0], "eat food", [0, 0, 4, 0], [false, false]);
+recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
 var scene = 0;
 var draw = function() {
     if(scene === 0) {
@@ -727,14 +728,13 @@ var draw = function() {
             line(mapsize, 0, mapsize, mapsize);
             line(0, mapsize, mapsize, mapsize);
             bushes.apply();
+            fires.apply();
             Player.draw();
             trees.apply();
             stones.apply();
-            fires.apply();
             Player.update();
             Player.starve();
             popMatrix();
-            Player.stats();
             rectMode(CENTER);
             inventory.draw();
             rectMode(CORNER);
