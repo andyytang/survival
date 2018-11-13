@@ -124,21 +124,37 @@ var collide = function(obj1, obj2) {
 };
 }
 //@SmallFire
-var SmallFire = function(x, y) {
+var SmallFire = function(x, y, type) {
     this.x = x;
     this.y = y;
+    this.type = type;
+    this.time = 0;
 };
  SmallFire.prototype.draw = function() {
-     for(var i = 0; i < 360; i += 36) {
-    pushMatrix();
-    translate(this.x, this.y);
-    rotate(i);
-    noStroke();
-    fill(92, 46, 4);
-    rect(-20, -3, 30, 5);
-    popMatrix();
+    if (this.type === true){
+        fill(255, 235, 0, 140);
+        ellipse(this.x, this.y, 65, 65);
+        fill(255, 235, 0, 120);
+        ellipse(this.x, this.y, 105, 105);
+        if (this.time % 50 === 0 && Player.inFireRange(this) === true){
+            Player.health = Player.health + 1;
+        }
+        if (this.time < 1000){
+            this.time++;
+        } else {
+            this.time = 0;
+            this.type = false;
+        }
     }
-    
+    for(var i = 0; i < 360; i += 36) {
+        pushMatrix();
+        translate(this.x, this.y);
+        rotate(i);
+        noStroke();
+        fill(92, 46, 4);
+        rect(-20, -3, 30, 5);
+        popMatrix();
+    }
     fill(255, 0, 0);
     rectMode(CENTER);
     rect(this.x, this.y, 19, 19);
@@ -163,6 +179,7 @@ var SmallFire = function(x, y) {
     rotate(45);
     rect(0, 0, 8, 8);
     popMatrix();
+    
 };
 
 var Pickaxe = function(x, y){
@@ -244,8 +261,8 @@ var Berries = function(x, y, size) {
 
 
 //The actual inventory
-var obj_count = [0, 0, 0, 0, 0];
-var obj_order = [];
+var obj_count = [0, 0, 0, 0, 1];
+var obj_order = [4];
 
 /** Lynette's Inventory*/
 var Inventory = function(x, y) {
@@ -348,6 +365,7 @@ var recipe = function(counts, desc, outpt, booleans) {
     this.drawapply = function(x, y) {
         if(mouseX > x && mouseY > y && mouseX < x + 40 && mouseY < y + 40) {
             stroke(this.color);
+            strokeWeight(1);
             fill(this.color, 50);
             rect(x, y, 200, 40, 3);
             fill(0);
@@ -396,8 +414,8 @@ recipes.apply = function(counts) {
 
 
 var fires = [];
-fires.add = function(x, y){
-    fires.push(new SmallFire(x, y));
+fires.add = function(x, y, type){
+    fires.push(new SmallFire(x, y, type));
 };
 fires.apply = function(){
      for(var i = 0; i < fires.length; i++) {
@@ -623,6 +641,9 @@ var player = function(x, y) {
     this.collectStone = function(stone){
         return abs(this.x - stone.x)*2 < (stone.r * 1.5) && abs(this.y - stone.y)*2 < (stone.r * 1.5);
     };
+    this.inFireRange = function(fire){
+        return abs(this.x - fire.x) < (105) && abs(this.y - fire.y)*2 < (105);
+    };
     this.applyCollision=function(obj,velx,vely){
         for(var i=0; i<obj.length; i++){
             if(collide(this,obj[i])){ // handle collisions
@@ -638,6 +659,7 @@ Player = new player(2000, 2000);
 cam = new Camera(Player.x, Player.y);
 
 var placeable = false;
+var fireIndex = 0;
 
 mouseClicked = function() {
     for (var i = 0; i < trees.length; i++) {
@@ -659,7 +681,7 @@ mouseClicked = function() {
         }
     }
     if (obj_count[4] > 0 && inventory.selected === obj_order.indexOf(4)){
-       fires.add(Player.x, Player.y);
+       fires.add(Player.x, Player.y, true);
        obj_count[4]--;
     }
 };
@@ -712,7 +734,7 @@ for(var i = 0; i < 100; i++) {
      * Need counts, desc, outpt, booleans
     ***/
 recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 3, 0, 0], [false, false]);
-recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 20], [false, false]);
+recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 0], [false, false]);
 recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
 var scene = 0;
 var draw = function() {
