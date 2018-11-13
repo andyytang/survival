@@ -42,6 +42,10 @@ textFont(createFont("Candara"), 15);
 var xoff = round(random(0, 4000));
 var sum = 0;    
 var grid = [];
+/**
+ * Map generation algorithm: use noise to map out 40px by 40px
+ * precipitation sections. Shown on large map when m is pressed.
+**/
 for (var x = 0; x < 100; x ++) {
     var yoff = xoff;
     for(var y = 0; y < 100; y ++) {
@@ -55,6 +59,7 @@ for (var x = 0; x < 100; x ++) {
 }
 var avg = sum/10000;
 var stdev = 0;
+// Find standard deviation
 for(var i = 0; i < grid.length; i++) {
     stdev += Math.pow(abs(grid[i] - avg), 2);
 }
@@ -64,11 +69,13 @@ stdev = Math.sqrt(stdev);
 //@KEY INTERACTION
 {
 keyPressed = function(){
-    keys[keyCode]=true;
+    // Set the keycode to true
+    keys[keyCode] = true;
+    // If 'm' pressed toggle the map
     if(keys[77]) {
         togglemap = !togglemap;
     }
-    
+    // If number key pressed select item in inventory
     for (var i = 48; i <= 52; i++){
         if (keys[i]){
             inventory.selected = i - 48;
@@ -123,14 +130,25 @@ var collide = function(obj1, obj2) {
     return dist(obj1.x, obj1.y, obj2.x, obj2.y) < obj1.r/2 + obj2.r/2;
 };
 }
-//@SmallFire
-var SmallFire = function(x, y, type) {
+
+//@ICONS
+{
+//@FIRE ICON
+{
+/**
+ * Fire icon in inventory. 
+ * @param x the x-location
+ * @param y the y-location
+ * @constructor set the x and y position
+**/
+var SmallFire = function(x, y) {
     this.x = x;
     this.y = y;
     this.type = type;
     this.time = 0;
 };
- SmallFire.prototype.draw = function() {
+// Drawing function
+SmallFire.prototype.draw = function() {
     if (this.type === true){
         fill(255, 235, 0, 140);
         ellipse(this.x, this.y, 65, 65);
@@ -145,7 +163,7 @@ var SmallFire = function(x, y, type) {
             this.time = 0;
             this.type = false;
         }
-    }
+    }// Draw wood
     for(var i = 0; i < 360; i += 36) {
         pushMatrix();
         translate(this.x, this.y);
@@ -155,6 +173,8 @@ var SmallFire = function(x, y, type) {
         rect(-20, -3, 30, 5);
         popMatrix();
     }
+    
+    // Draw fire segments
     fill(255, 0, 0);
     rectMode(CENTER);
     rect(this.x, this.y, 19, 19);
@@ -179,17 +199,25 @@ var SmallFire = function(x, y, type) {
     rotate(45);
     rect(0, 0, 8, 8);
     popMatrix();
-    
 };
-
+}
+//@PICKAXE ICON
+{
+/**
+ * Pickaxe icon in inventory. 
+ * @param x the x-location
+ * @param y the y-location
+ * @constructor set the x and y position
+**/
 var Pickaxe = function(x, y){
     this.x = x;
     this.y = y;
 };
-
+// Draw pickaxe
 Pickaxe.prototype.draw = function() {
     rectMode(LEFT);
     noStroke();
+    
     fill(110, 53, 53);
     rect(this.x, this.y, 5, 35);
     
@@ -199,19 +227,29 @@ Pickaxe.prototype.draw = function() {
 
     triangle(this.x-5, this.y, this.x-5, this.y+7, this.x-19, this.y+12);
     triangle(this.x+10, this.y, this.x+10, this.y+7, this.x+24, this.y+12);
+    
     strokeWeight(2);
     stroke(200, 200, 200);
     line(this.x-5, this.y+1.5, this.x-5, this.y+4);
     line(this.x+10, this.y+1.5, this.x+10, this.y+4);
 };
-
-//@WOOD
+}
+//@WOOD ICON
+{
+/**
+ * Wood icon in inventory. 
+ * @param x the x-location
+ * @param y the y-location
+ * @param size the size
+ * @constructor set the x and y position, and size
+**/
 var Wood = function(x, y, size) {
     this.x = x;
     this.y = y;
     this.size = size;
 };
- Wood.prototype.draw = function() {
+// Draw the wood icon
+Wood.prototype.draw = function() {
     noStroke();
     rectMode(CENTER);
     pushMatrix();
@@ -225,44 +263,63 @@ var Wood = function(x, y, size) {
     ellipse(0, -15, this.size-1, this.size-5);
     popMatrix();
 };
-
+}
+//@STONE ICON
+{
+/**
+ * Stone icon in inventory. 
+ * @param x the x-location
+ * @param y the y-location
+ * @param size the size
+ * @constructor set the x and y position and size
+**/
 var StoneItem = function(x, y, size) {
     this.x = x;
     this.y = y;
     this.size = size;
 };
-
+//Draw stone icon
 StoneItem.prototype.draw = function() {
     strokeWeight(1);
     stroke(33, 33, 33);
     fill(100, 100, 100);
-    ellipse(this.x, this.y, this.size,        this.size);
-    ellipse(this.x+13, this.y+7, this.size     -13, this.size-13);
+    ellipse(this.x, this.y, this.size, this.size);
+    ellipse(this.x+13, this.y+7, this.size - 13, this.size-13);
 };
-
-//@BERRIES
+}
+//@BERRIES ICON
+{
+/**
+ * Berry icon in inventory. 
+ * @param x the x-location
+ * @param y the y-location
+ * @param size the size
+ * @constructor set the x and y position and size
+**/
 var Berries = function(x, y, size) {
     this.x = x;
     this.y = y;
     this.size = size;
 };
- Berries.prototype.draw = function() {
+//Draw the berries
+Berries.prototype.draw = function() {
     stroke(0, 10, 130);
     fill(0, 45, 255);
-    ellipse(this.x, this.y, this.size,        this.size);
-    ellipse(this.x+10, this.y+5, this.size     , this.size);
-    ellipse(this.x-3, this.y+11, this.size     , this.size);
+    ellipse(this.x, this.y, this.size, this.size);
+    ellipse(this.x+10, this.y+5, this.size, this.size);
+    ellipse(this.x-3, this.y+11, this.size, this.size);
     noStroke();
     fill(15, 10, 168);
-    ellipse(this.x-3, this.y-5, this.size     -11, this.size-11);
-    ellipse(this.x+15, this.y+2, this.size     -11, this.size-11);
-    ellipse(this.x-8, this.y+10, this.size     -11, this.size-11);
+    ellipse(this.x-3, this.y-5, this.size-11, this.size-11);
+    ellipse(this.x+15, this.y+2, this.size-11, this.size-11);
+    ellipse(this.x-8, this.y+10, this.size-11, this.size-11);
 };
-
+}
+}
 
 //The actual inventory
-var obj_count = [0, 0, 0, 0, 1];
-var obj_order = [4];
+var obj_count = [0, 0, 0, 0, 0];
+var obj_order = [];
 
 /** Lynette's Inventory*/
 var Inventory = function(x, y) {
