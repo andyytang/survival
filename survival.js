@@ -141,7 +141,7 @@ var collide = function(obj1, obj2) {
  * @param y the y-location
  * @constructor set the x and y position
 **/
-var SmallFire = function(x, y) {
+var SmallFire = function(x, y, type) {
     this.x = x;
     this.y = y;
     this.type = type;
