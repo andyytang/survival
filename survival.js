@@ -416,7 +416,9 @@ var recipe = function(counts, desc, outpt, booleans) {
                 return false;
             }
         }
-        
+        if (obj_order.length > 5 && outpt[0] > 0){
+            return false;
+        }
         return true;
     };
     this.drawapply = function(x, y) {
