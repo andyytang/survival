@@ -149,15 +149,16 @@ var SmallFire = function(x, y, type) {
 };
 // Drawing function
 SmallFire.prototype.draw = function() {
+    rectMode(LEFT);
     if (this.type === true){
         fill(255, 235, 0, 140);
         ellipse(this.x, this.y, 65, 65);
         fill(255, 235, 0, 120);
         ellipse(this.x, this.y, 105, 105);
-        if (this.time % 50 === 0 && Player.inFireRange(this) === true){
+        if (this.time % 50 === 0 && this.time > 0 && Player.inFireRange(this) === true){
             Player.health = Player.health + 1;
         }
-        if (this.time < 1000){
+        if (this.time < 500){
             this.time++;
         } else {
             this.time = 0;
@@ -212,6 +213,7 @@ SmallFire.prototype.draw = function() {
 var Pickaxe = function(x, y){
     this.x = x;
     this.y = y;
+    this.health = 100;
 };
 // Draw pickaxe
 Pickaxe.prototype.draw = function() {
@@ -372,6 +374,10 @@ var Inventory = function(x, y) {
                         var pickaxe = new Pickaxe(378 + 60 * inc, 533);
                         pickaxe.draw();
                         break;
+                    case 4:
+                        var fire = new SmallFire(380 + 60 * inc, 550, false);
+                        fire.draw();
+                        break;
                     default:
                         break;
                 }
@@ -382,10 +388,7 @@ var Inventory = function(x, y) {
             if (obj_count[obj_order[i]] === 0) {
                 obj_order.splice(i, 1);
             }
-            
         }
-       
-        
     };
 };
 inventory = new Inventory(500, 550, 0);
@@ -416,7 +419,6 @@ var recipe = function(counts, desc, outpt, booleans) {
                 return false;
             }
         }
-        
         if (obj_order.length > 5 && outpt[0] > 0){
             return false;
         }
@@ -488,6 +490,8 @@ var tree = function(x, y) {
     this.x = x;
     this.y = y;
     this.r = 40;
+    this.dir = atan2(this.y - Player.y, this.x - Player.x);    
+    this.deg = round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100;
     this.leaves = random(3, 5.5);
     this.draw = function() {
         noStroke();
@@ -498,6 +502,10 @@ var tree = function(x, y) {
     };
     this.harvest = function()  {
         this.r -= (40/(floor(this.leaves)));
+    };
+    this.updatePos = function() {
+        this.dir = atan2(this.y - Player.y, this.x - Player.x);
+        this.deg = round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100;
     };
 };
 var trees = [];
@@ -601,8 +609,7 @@ var wolf = function() {
         
     };
 };
-
-//Deer -- WIP
+ //Deer -- WIP
 var deer = function() {
     this.x = random(0, 4000);
     this.y = random(0, 4000);
@@ -617,7 +624,6 @@ var deer = function() {
     };
 };
 }
-
 var player = function(x, y) {
     this.x = x;
     this.y = y;
@@ -702,6 +708,9 @@ var player = function(x, y) {
         this.dir = atan2(mouseY - height/2, mouseX - width/2);
         this.xspeed = constrain(this.xspeed, -1*this.speedLimit, this.speedLimit);
         this.yspeed = constrain(this.yspeed, -1*this.speedLimit, this.speedLimit);
+        for (var i = 0; i < trees.length; i++){
+            trees[i].updatePos();
+        }
     };
     this.starve = function(){
         if (this.speedLimit === 4){
@@ -722,10 +731,13 @@ var player = function(x, y) {
         textSize(15);
         fill(0);
         text("Location: (" + round(this.x*100)/100 + ", " + round(this.y*100)/100 + ")", 20, 20);
-        text("Facing: " + round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100 + " degrees from East", 20, 35);
+        text("Facing: " + (round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100) + " degrees from East", 20, 35);
     };
     this.collectTree = function(tree){
-        return abs(this.x - tree.x)*2 < (tree.r*tree.leaves) && abs(this.y - tree.y)*2 < (tree.r*tree.leaves);
+        var degree = round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100;
+        var phi =  Math.abs(degree - tree.deg) % 360; 
+        var distance = phi > 180 ? 360 - phi : phi;
+        return abs(this.x - tree.x)*2 < (tree.r*tree.leaves) && abs(this.y - tree.y)*2 < (tree.r*tree.leaves) && (abs(distance) <= 30);
     };
     this.collectBush = function(bush){
         return abs(this.x - bush.x)*2 < (bush.r * 1.5) && abs(this.y - bush.y)*2 < (bush.r * 1.5);
@@ -759,6 +771,7 @@ mouseClicked = function() {
             trees[i].harvest();
             obj_count[0]++;
         }
+        
     }
     for (var i = 0; i < bushes.length; i++) {
         if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0  && obj_count[1] < 64) {
@@ -809,15 +822,14 @@ for (var i = 0; i < bushes.length; i++){
     bushes[i].randomBerries();
 }
 
+
 var centerx = random(1000, 3000);
 var centery = random(1000, 3000);
 for(var i = 0; i < 50; i++) {
     var a = random(centerx - 200, centerx + 200);
     var b = random(centery - 200, centery + 200);
-    
     stones.add(a,b);
 }
-
 
     /***
      * Before I forget:
@@ -836,6 +848,7 @@ var draw = function() {
         if(!togglemap) {
             background(120, 180, 94);
             rectMode(CORNER);
+            Player.stats();
             pushMatrix();
             cam.view(Player);
             stroke(255, 0, 0);
