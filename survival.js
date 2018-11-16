@@ -416,6 +416,7 @@ var recipe = function(counts, desc, outpt, booleans) {
                 return false;
             }
         }
+        
         if (obj_order.length > 5 && outpt[0] > 0){
             return false;
         }
@@ -585,6 +586,38 @@ bushes.apply = function() {
     }
 };
 
+{
+//Wolves -- WIP
+var wolf = function() {
+    this.x = random(0, 4000);
+    this.y = random(0, 4000);
+    this.health = 200;
+    this.viewradius = 800;
+    this.draw = function() {
+        fill(255, 0, 0);
+    };
+    // Rudimentary: make it move towards player or deer
+    this.update = function() {
+        
+    };
+};
+
+//Deer -- WIP
+var deer = function() {
+    this.x = random(0, 4000);
+    this.y = random(0, 4000);
+    this.health = 100;
+    this.viewradius = 200;
+    this.draw = function() {
+        
+    };
+    // Rudimentary: make it go towards bushes and avoid wolves
+    this.update = function() {
+        
+    };
+};
+}
+
 var player = function(x, y) {
     this.x = x;
     this.y = y;
@@ -714,7 +747,7 @@ var player = function(x, y) {
         }
     };
 };
-Player = new player(2000, 2000);
+Player = new player(random(1000, 3000), random(1000, 3000));
 cam = new Camera(Player.x, Player.y);
 
 var placeable = false;
@@ -776,9 +809,11 @@ for (var i = 0; i < bushes.length; i++){
     bushes[i].randomBerries();
 }
 
-for(var i = 0; i < 100; i++) {
-    var a = random(0, 4000);
-    var b = random(0, 4000);
+var centerx = random(1000, 3000);
+var centery = random(1000, 3000);
+for(var i = 0; i < 50; i++) {
+    var a = random(centerx - 200, centerx + 200);
+    var b = random(centery - 200, centery + 200);
     
     stones.add(a,b);
 }
