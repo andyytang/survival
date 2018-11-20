@@ -22,8 +22,9 @@
  * 0 = wood
  * 1 = berry
  * 2 = stone
- * 3 = pickaxe (WIP)
- * 4 = campfire
+ * 3 = pickaxe 
+ * 4 = small campfire
+ * 5 = large campfire (WIP)
  * */
 
 //@GLOBAL VARIABLES
@@ -36,6 +37,7 @@ var togglemap = false;
 var keys = [];
 var generator = new Random(1);
 textFont(createFont("Candara"), 15);
+var scene = -1;
 }
 //@MAP GENERATION
 {
@@ -320,7 +322,7 @@ Berries.prototype.draw = function() {
 }
 
 //The actual inventory
-var obj_count = [0, 0, 0, 0, 0];
+var obj_count = [0, 0, 0, 0, 0, 0];
 var obj_order = [];
 
 /** Lynette's Inventory*/
@@ -486,13 +488,13 @@ fires.apply = function(){
 };
 
 //Trees
-var tree = function(x, y) {
+var tree = function(x, y, leaves) {
     this.x = x;
     this.y = y;
     this.r = 40;
     this.dir = atan2(this.y - Player.y, this.x - Player.x);    
     this.deg = round((((-1*Math.sign(this.dir)+1)/2)*360 + this.dir)*100)/100;
-    this.leaves = random(3, 5.5);
+    this.leaves = leaves;
     this.draw = function() {
         noStroke();
         fill(11, 120, 18, 100);
@@ -509,8 +511,8 @@ var tree = function(x, y) {
     };
 };
 var trees = [];
-trees.add = function(x, y) {
-    trees.push(new tree(x, y));
+trees.add = function(x, y, leaves) {
+    trees.push(new tree(x, y, leaves));
 };
 trees.apply = function() {
     for(var i = 0; i < trees.length; i++) {
@@ -563,7 +565,7 @@ for(var i = 0; i < randomLength; i++){
 }
     };
     this.draw = function() {
-        if(view(this)) { 
+        //if(view(this)) { 
             noStroke();
             fill(19, 145, 21);
              if (this.berries.length !== 0){
@@ -576,7 +578,7 @@ for(var i = 0; i < randomLength; i++){
                ellipse(this.berries[i][0], this.berries[i][1], this.r/5, this.r/5);
             }
              }
-        }
+        //}
     };
     this.harvest = function()  {
         this.berries.splice(floor(random(0,1)*this.berries.length), 1);
@@ -766,6 +768,9 @@ var placeable = false;
 var fireIndex = 0;
 
 mouseClicked = function() {
+    if(mouseX > 417.5 && mouseX < 582.5 && mouseY > 300 && mouseY < 360 && scene === -1){
+        scene = 0;
+    }
     for (var i = 0; i < trees.length; i++) {
         if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
             trees[i].harvest();
@@ -801,7 +806,7 @@ for(var i = 0; i < 450; i++) {
         y = random(0, 4000);
         position = round(x/40)*100 + round(y/40);
     }
-    trees.add(x, y);  
+    trees.add(x, y, random(3, 5.5));  
 }
         
 
@@ -842,8 +847,74 @@ for(var i = 0; i < 50; i++) {
 recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 3, 0, 0], [false, false]);
 recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 0], [false, false]);
 recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
-var scene = 0;
+
+var Button = function(x, y, w, h, text){
+    this.x = x;
+    this.y = y;
+    this.width = w;
+    this.height = h;
+    this.text = text;
+};
+
+Button.prototype.draw = function() {
+   rectMode(CENTER);
+   fill(180, 180, 180);
+   rect(this.x, this.y, this.width, this.height);
+   fill(0, 0, 0);
+};
+
+var TitleScreen = function(){
+    background(110, 200, 90);
+    rectMode(CENTER);
+    
+    textSize(80);
+    fill(0, 0, 0);
+    text("FOREST", 362, 251);
+    
+    stroke(80, 80, 80);
+    strokeWeight(3);
+    fill(180, 180, 180);
+    
+    rect(490, 330, 165, 60, 6);
+    fill(0, 0, 0);
+    textSize(40);
+    text("START", 435,342);
+    fill(180, 180, 180);
+    rect(493, 417, 275, 60, 6);
+    textSize(35);
+    fill(0, 0, 0);
+    text("HOW TO PLAY", 390, 430);
+    
+    var treePos = [[180, 100], [130, 300], [240, 490], [440, 590], [740, 510], [880, 380], [800, 180], [600, 30], [400, 10], [-5, 140], [40, -55], [30, 455], [100, 655], [620, 670], [930, 610], [900, -15], [1040, 220]];
+    
+    for (var i = 0; i < treePos.length; i++){
+        var Tree = new tree(treePos[i][0], treePos[i][1], 4);
+        Tree.draw();
+    }
+    
+    var berryBushA = new bush(260, 5);
+    var berryBushB = new bush(15, 270);
+    var berryBushC = new bush(230, 380);
+    var berryBushD = new bush(570, 550);
+    var berryBushE = new bush(900, 500);
+    var berryBushF = new bush(740, 50);
+    var berryBushG = new bush(950, 120);
+    
+    berryBushA.draw();
+    berryBushB.draw();
+    berryBushC.draw();
+    berryBushD.draw();
+    berryBushE.draw();
+    berryBushF.draw();
+    berryBushG.draw();
+};
+
+
+noStroke();
 var draw = function() {
+    if(scene === -1){
+        TitleScreen();
+    }
     if(scene === 0) {
         if(!togglemap) {
             background(120, 180, 94);
