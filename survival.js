@@ -424,6 +424,9 @@ var recipe = function(counts, desc, outpt, booleans) {
         if (obj_order.length > 5 && outpt[0] > 0){
             return false;
         }
+        if (outpt[0] === 15 && obj_order[3] === 1){
+            return false;
+        }
         return true;
     };
     this.drawapply = function(x, y) {
@@ -767,10 +770,43 @@ cam = new Camera(Player.x, Player.y);
 var placeable = false;
 var fireIndex = 0;
 
+
+var Button = function(x, y, w, h){
+    this.x = x;
+    this.y = y;
+    this.width = w;
+    this.height = h;
+};
+
+Button.prototype.draw = function(){
+   stroke(80, 80, 80);
+   strokeWeight(3);
+   if (this.isMouseInside(mouseX, mouseY)){
+       fill(124, 148, 143);
+   } else{
+       fill(180, 180, 180);
+   }
+   rect(this.x, this.y, this.width, this.height, 6);
+   fill(0, 0, 0);
+};
+
+Button.prototype.isMouseInside = function(x, y) {
+    return x > this.x &&
+           x < (this.x + this.width) &&
+           y > this.y &&
+           y < (this.y + this.height);
+};
+
+
+var startButton = new Button(400, 300, 165, 60);
+
+var howToPlayButton = new Button(355, 390, 275, 60);
+
 mouseClicked = function() {
-    if(mouseX > 417.5 && mouseX < 582.5 && mouseY > 300 && mouseY < 360 && scene === -1){
+    if(startButton.isMouseInside(mouseX, mouseY) && scene === -1){
         scene = 0;
     }
+    if (scene === 0){
     for (var i = 0; i < trees.length; i++) {
         if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
             trees[i].harvest();
@@ -793,6 +829,7 @@ mouseClicked = function() {
     if (obj_count[4] > 0 && inventory.selected === obj_order.indexOf(4)){
        fires.add(Player.x, Player.y, true);
        obj_count[4]--;
+    }
     }
 };
 
@@ -848,42 +885,36 @@ recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 3, 0, 0], [false, false]);
 recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 0], [false, false]);
 recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
 
-var Button = function(x, y, w, h, text){
+
+var TitleScreen = function(x, y){
     this.x = x;
     this.y = y;
-    this.width = w;
-    this.height = h;
-    this.text = text;
 };
 
-Button.prototype.draw = function() {
-   rectMode(CENTER);
-   fill(180, 180, 180);
-   rect(this.x, this.y, this.width, this.height);
-   fill(0, 0, 0);
-};
-
-var TitleScreen = function(){
+TitleScreen.prototype.draw = function() {
     background(110, 200, 90);
-    rectMode(CENTER);
+    rectMode(LEFT);
     
     textSize(80);
     fill(0, 0, 0);
     text("FOREST", 362, 251);
     
-    stroke(80, 80, 80);
+    /*stroke(80, 80, 80);
     strokeWeight(3);
     fill(180, 180, 180);
     
     rect(490, 330, 165, 60, 6);
-    fill(0, 0, 0);
+    */
+    
+    startButton.draw();
+    
     textSize(40);
-    text("START", 435,342);
-    fill(180, 180, 180);
-    rect(493, 417, 275, 60, 6);
+    text("Play", 449,342);
+    
+    howToPlayButton.draw();
     textSize(35);
     fill(0, 0, 0);
-    text("HOW TO PLAY", 390, 430);
+    text("Instructions", 404, 428);
     
     var treePos = [[180, 100], [130, 300], [240, 490], [440, 590], [740, 510], [880, 380], [800, 180], [600, 30], [400, 10], [-5, 140], [40, -55], [30, 455], [100, 655], [620, 670], [930, 610], [900, -15], [1040, 220]];
     
@@ -907,13 +938,19 @@ var TitleScreen = function(){
     berryBushE.draw();
     berryBushF.draw();
     berryBushG.draw();
+    
+    fill(0,0,0);
+    textSize(25);
+    text("Forest v0.01", 25, 575);
+    text("Created for a school project", 675, 575);
 };
 
+var titleScreen = new TitleScreen(500, 330);
 
 noStroke();
 var draw = function() {
     if(scene === -1){
-        TitleScreen();
+        titleScreen.draw();
     }
     if(scene === 0) {
         if(!togglemap) {
