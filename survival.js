@@ -36,8 +36,9 @@ var mapsize = 4000;
 var togglemap = false;
 var keys = [];
 var generator = new Random(1);
-textFont(createFont("Candara"), 15);
+textFont(createFont("Calibri"), 15);
 var scene = -1;
+var timeOfDay = 0;
 }
 //@MAP GENERATION
 {
@@ -204,6 +205,7 @@ SmallFire.prototype.draw = function() {
     popMatrix();
 };
 }
+//@BIG FIRE ICON
 //@PICKAXE ICON
 {
 /**
@@ -322,7 +324,7 @@ Berries.prototype.draw = function() {
 }
 
 //The actual inventory
-var obj_count = [0, 0, 0, 0, 0, 0];
+var obj_count = [0, 0, 0, 0, 0];
 var obj_order = [];
 
 /** Lynette's Inventory*/
@@ -421,10 +423,10 @@ var recipe = function(counts, desc, outpt, booleans) {
                 return false;
             }
         }
-        if (obj_order.length > 5 && outpt[0] > 0){
+        if (obj_order.length > 5){
             return false;
         }
-        if (outpt[0] === 15 && obj_order[3] === 1){
+        if (obj_count[3] === 1 && this.desc === "pickaxe"){
             return false;
         }
         return true;
@@ -654,6 +656,15 @@ var player = function(x, y) {
         fill(230, 145, 10);
         rect(342, 500, this.food*2.1, 12);
     };
+    this.dayChange = function(){
+        if (this.interval % 30000 === 0 && this.interval > 0){
+            if (timeOfDay < 4){
+                timeOfDay++;
+            } else {
+                timeOfDay = 0;
+            }
+        }
+    };
     this.draw = function() {
         noStroke();
         rectMode(CORNER);
@@ -722,14 +733,13 @@ var player = function(x, y) {
             this.interval += 5;
         }
         this.interval++;
-        if (this.interval >= 500){
+        if (this.interval % 500 === 0 && this.interval > 0){
             if (this.food !== 0){
                 this.food -= 5;
             }
             if (this.food < 20){
                 this.health -= (20 - this.food)/4;
             }
-            this.interval = 0;
         }
     };
     this.stats = function() {
@@ -767,9 +777,7 @@ var player = function(x, y) {
 Player = new player(random(1000, 3000), random(1000, 3000));
 cam = new Camera(Player.x, Player.y);
 
-var placeable = false;
 var fireIndex = 0;
-
 
 var Button = function(x, y, w, h){
     this.x = x;
@@ -778,7 +786,8 @@ var Button = function(x, y, w, h){
     this.height = h;
 };
 
-Button.prototype.draw = function(){
+Button.prototype.draw = function() {
+   rectMode(LEFT);
    stroke(80, 80, 80);
    strokeWeight(3);
    if (this.isMouseInside(mouseX, mouseY)){
@@ -800,7 +809,7 @@ Button.prototype.isMouseInside = function(x, y) {
 
 var startButton = new Button(400, 300, 165, 60);
 
-var howToPlayButton = new Button(355, 390, 275, 60);
+var howToPlayButton = new Button(365, 390, 250, 60);
 
 mouseClicked = function() {
     if(startButton.isMouseInside(mouseX, mouseY) && scene === -1){
@@ -886,14 +895,8 @@ recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 0], [false, false]);
 recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
 
 
-var TitleScreen = function(x, y){
-    this.x = x;
-    this.y = y;
-};
-
-TitleScreen.prototype.draw = function() {
+var TitleScreen= function() {
     background(110, 200, 90);
-    rectMode(LEFT);
     
     textSize(80);
     fill(0, 0, 0);
@@ -945,16 +948,34 @@ TitleScreen.prototype.draw = function() {
     text("Created for a school project", 675, 575);
 };
 
-var titleScreen = new TitleScreen(500, 330);
 
 noStroke();
 var draw = function() {
     if(scene === -1){
-        titleScreen.draw();
+        TitleScreen();
     }
     if(scene === 0) {
         if(!togglemap) {
-            background(120, 180, 94);
+            switch(timeOfDay){
+                case 0: 
+                 background(120, 180, 94);
+                    break;
+                case 1:
+                 background(214, 159, 19);
+                   break;
+                case 2:
+                  background(50, 80, 40);
+                  break;
+                case 3:
+                 background(214, 159, 19);
+                   break;
+                case 4: 
+                 background(120, 180, 94);
+                    break;
+                default:
+                background(120, 180, 94);
+                break;
+            }
             rectMode(CORNER);
             Player.stats();
             pushMatrix();
@@ -971,6 +992,7 @@ var draw = function() {
             stones.apply();
             Player.update();
             Player.starve();
+            Player.dayChange();
             popMatrix();
             rectMode(CENTER);
             inventory.draw();
