@@ -24,7 +24,6 @@
  * 2 = stone
  * 3 = pickaxe 
  * 4 = small campfire
- * 5 = large campfire (WIP)
  * */
 
 //@GLOBAL VARIABLES
@@ -39,12 +38,21 @@ var generator = new Random(1);
 textFont(createFont("Calibri"), 15);
 var scene = -1;
 var timeOfDay = 0;
+//The actual inventory
+var obj_count = [0, 0, 0, 1, 0];
+var obj_order = [3];
+var score = 0;
 }
+
 //@MAP GENERATION
-{
-var xoff = round(random(0, 4000));
-var sum = 0;    
+
 var grid = [];
+var stdev = 0;
+var sum = 0;  
+var avg;
+var newMap = function(){
+var xoff = round(random(0, 4000));
+
 /**
  * Map generation algorithm: use noise to map out 40px by 40px
  * precipitation sections. Shown on large map when m is pressed.
@@ -61,14 +69,13 @@ for (var x = 0; x < 100; x ++) {
     xoff += 0.02;
 }
 var avg = sum/10000;
-var stdev = 0;
 // Find standard deviation
 for(var i = 0; i < grid.length; i++) {
     stdev += Math.pow(abs(grid[i] - avg), 2);
-}
 stdev /= 10000;
 stdev = Math.sqrt(stdev);
 }
+};
 //@KEY INTERACTION
 {
 keyPressed = function(){
@@ -214,10 +221,11 @@ SmallFire.prototype.draw = function() {
  * @param y the y-location
  * @constructor set the x and y position
 **/
+var pickAxeHealth = 20;
+
 var Pickaxe = function(x, y){
     this.x = x;
     this.y = y;
-    this.health = 100;
 };
 // Draw pickaxe
 Pickaxe.prototype.draw = function() {
@@ -238,7 +246,19 @@ Pickaxe.prototype.draw = function() {
     stroke(200, 200, 200);
     line(this.x-5, this.y+1.5, this.x-5, this.y+4);
     line(this.x+10, this.y+1.5, this.x+10, this.y+4);
+    strokeWeight(1);
+    stroke(0, 0, 0);
+    fill(11, 186, 28, 100);
+    rect(this.x - 12, this.y + 25, 32, 10);
+    fill(11, 186, 28);
+    rect(this.x - 12, this.y + 25, pickAxeHealth * 1.6, 10);
+    if (pickAxeHealth <= 0){
+        obj_count[3]--;
+        obj_order.splice(obj_order.indexOf(3), 1);
+        pickAxeHealth = 20;
+    }
 };
+
 }
 //@WOOD ICON
 {
@@ -265,6 +285,7 @@ Wood.prototype.draw = function() {
     rect(0, 0, this.size, this.size*2);
     ellipse(0, 15, this.size-1, this.size-5);
     stroke(110, 53, 53);
+    strokeWeight(1);
     fill(247, 195, 111);
     ellipse(0, -15, this.size-1, this.size-5);
     popMatrix();
@@ -323,9 +344,6 @@ Berries.prototype.draw = function() {
 }
 }
 
-//The actual inventory
-var obj_count = [0, 0, 0, 0, 0];
-var obj_order = [];
 
 /** Lynette's Inventory*/
 var Inventory = function(x, y) {
@@ -358,7 +376,7 @@ var Inventory = function(x, y) {
             }
         }
         var inc = 0;
-        
+        var pickHealth = 20;
         for (var i = 0; i < obj_order.length; i++) {
                 fill(255, 255, 255);
                 switch (obj_order[i]) {
@@ -385,9 +403,11 @@ var Inventory = function(x, y) {
                     default:
                         break;
                 }
-                fill(255, 255, 255);
-                textSize(25);
-                text(obj_count[obj_order[i]], 377 + 60 * inc, 565);
+                if (obj_order[i] !== 3){
+                    fill(255, 255, 255);
+                    textSize(25);
+                    text(obj_count[obj_order[i]], 377 + 60 * inc, 565);
+                }
                 inc++;
             if (obj_count[obj_order[i]] === 0) {
                 obj_order.splice(i, 1);
@@ -657,7 +677,7 @@ var player = function(x, y) {
         rect(342, 500, this.food*2.1, 12);
     };
     this.dayChange = function(){
-        if (this.interval % 30000 === 0 && this.interval > 0){
+        if (this.interval % 10000 === 0 && this.interval > 0){
             if (timeOfDay < 4){
                 timeOfDay++;
             } else {
@@ -806,41 +826,17 @@ Button.prototype.isMouseInside = function(x, y) {
            y < (this.y + this.height);
 };
 
+var startButton = new Button(425, 300, 165, 60);
 
-var startButton = new Button(400, 300, 165, 60);
+var howToPlayButton = new Button(390, 390, 250, 60);
 
-var howToPlayButton = new Button(365, 390, 250, 60);
+var playAgain = new Button(387, 340, 250, 60);
 
-mouseClicked = function() {
-    if(startButton.isMouseInside(mouseX, mouseY) && scene === -1){
-        scene = 0;
-    }
-    if (scene === 0){
-    for (var i = 0; i < trees.length; i++) {
-        if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
-            trees[i].harvest();
-            obj_count[0]++;
-        }
-        
-    }
-    for (var i = 0; i < bushes.length; i++) {
-        if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0  && obj_count[1] < 64) {
-            bushes[i].harvest();
-            obj_count[1]++;
-        }
-    }
-    for (var i = 0; i < stones.length; i++) {
-        if (Player.collectStone(stones[i]) === true && obj_count[2] < 64 && obj_count[3] > 0 && obj_order[inventory.selected] === 3) {
-            stones[i].harvest();
-            obj_count[2]++;
-        }
-    }
-    if (obj_count[4] > 0 && inventory.selected === obj_order.indexOf(4)){
-       fires.add(Player.x, Player.y, true);
-       obj_count[4]--;
-    }
-    }
-};
+var generateMap = function(){
+    
+bushes.splice(0,bushes.length);
+trees.splice(0,bushes.length);
+stones.splice(0, stones.length);
 
 for(var i = 0; i < 450; i++) {
     var x = random(0, 4000);
@@ -852,7 +848,7 @@ for(var i = 0; i < 450; i++) {
         y = random(0, 4000);
         position = round(x/40)*100 + round(y/40);
     }
-    trees.add(x, y, random(3, 5.5));  
+    trees.add(x, y, random(3, 5.5));
 }
         
 
@@ -873,7 +869,6 @@ for (var i = 0; i < bushes.length; i++){
     bushes[i].randomBerries();
 }
 
-
 var centerx = random(1000, 3000);
 var centery = random(1000, 3000);
 for(var i = 0; i < 50; i++) {
@@ -881,6 +876,54 @@ for(var i = 0; i < 50; i++) {
     var b = random(centery - 200, centery + 200);
     stones.add(a,b);
 }
+};
+
+mouseClicked = function() {
+    if(startButton.isMouseInside(mouseX, mouseY) && scene === -1){
+        scene = 0;
+    }
+    if (playAgain.isMouseInside(mouseX, mouseY) && scene === 1){
+        grid = [];
+        generator = new Random(1);
+        stdev = 0;
+        sum = 0;
+        newMap();
+        fires.splice(0, fires.length);
+        generateMap();
+        obj_count = [0, 0, 0, 0, 0];
+        obj_order = [];
+        timeOfDay = 0;
+        scene = 0;
+    }
+    if (scene === 0){
+    for (var i = 0; i < trees.length; i++) {
+        if (Player.collectTree(trees[i]) === true && obj_count[0] < 64) {
+            trees[i].harvest();
+            obj_count[0]++;
+        }
+        
+    }
+    for (var i = 0; i < bushes.length; i++) {
+        if (Player.collectBush(bushes[i]) === true && bushes[i].berries.length > 0  && obj_count[1] < 64) {
+            bushes[i].harvest();
+            obj_count[1]++;
+        }
+    }
+    for (var i = 0; i < stones.length; i++) {
+        if (Player.collectStone(stones[i]) === true && obj_count[2] < 64 && obj_count[3] > 0 && obj_order[inventory.selected] === 3) {
+            stones[i].harvest();
+            obj_count[2]++;
+            pickAxeHealth -= 2;
+        }
+    }
+    if (obj_count[4] > 0 && inventory.selected === obj_order.indexOf(4)){
+       fires.add(Player.x, Player.y, true);
+       obj_count[4]--;
+    }
+    }
+};
+
+generateMap();
 
     /***
      * Before I forget:
@@ -895,31 +938,10 @@ recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 0], [false, false]);
 recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
 
 
-var TitleScreen= function() {
-    background(110, 200, 90);
+
+var backgroundThing = function(){
     
-    textSize(80);
-    fill(0, 0, 0);
-    text("FOREST", 362, 251);
-    
-    /*stroke(80, 80, 80);
-    strokeWeight(3);
-    fill(180, 180, 180);
-    
-    rect(490, 330, 165, 60, 6);
-    */
-    
-    startButton.draw();
-    
-    textSize(40);
-    text("Play", 449,342);
-    
-    howToPlayButton.draw();
-    textSize(35);
-    fill(0, 0, 0);
-    text("Instructions", 404, 428);
-    
-    var treePos = [[180, 100], [130, 300], [240, 490], [440, 590], [740, 510], [880, 380], [800, 180], [600, 30], [400, 10], [-5, 140], [40, -55], [30, 455], [100, 655], [620, 670], [930, 610], [900, -15], [1040, 220]];
+    var treePos = [[180, 100], [130, 300], [240, 490], [440, 590], [740, 510], [880, 380], [600, 30], [400, 10], [-5, 140], [40, -55], [30, 455], [100, 655], [620, 670], [930, 610], [900, -15], [1040, 220]];
     
     for (var i = 0; i < treePos.length; i++){
         var Tree = new tree(treePos[i][0], treePos[i][1], 4);
@@ -942,12 +964,59 @@ var TitleScreen= function() {
     berryBushF.draw();
     berryBushG.draw();
     
+    
+    var fire = new SmallFire(833, 208, true);
+    fire.draw();
+};
+var TitleScreen= function() {
+    background(110, 200, 90);
+    
+    textSize(80);
+    fill(0, 0, 0);
+    text("To Build A Fire", 276, 257);
+    
+    /*stroke(80, 80, 80);
+    strokeWeight(3);
+    fill(180, 180, 180);
+    
+    rect(490, 330, 165, 60, 6);
+    */
+    
+    
+    startButton.draw();
+    
+    textSize(40);
+    text("Play", 470,342);
+    
+    howToPlayButton.draw();
+    textSize(35);
+    fill(0, 0, 0);
+    text("Instructions", 430, 428);
+    backgroundThing();
+    
+    
     fill(0,0,0);
     textSize(25);
-    text("Forest v0.01", 25, 575);
+    text("TBaF v0.01", 25, 575);
     text("Created for a school project", 675, 575);
 };
 
+
+var gameOver = function(){
+    background(50, 75, 40);
+    var score = floor(Player.interval/1000);
+    textSize(70);
+    fill(255, 255, 255);
+    text("You died!", 376, 250);
+    fill(255, 255, 255);
+    textSize(35);
+    text("Score: " + score + " seconds" , 394, 300);
+    backgroundThing();
+    playAgain.draw();
+    textSize(40);
+    text("Respawn", 440,380);
+    
+};
 
 noStroke();
 var draw = function() {
@@ -1057,9 +1126,6 @@ var draw = function() {
         }
     }
     if (scene === 1){
-        background(0,0,0);
-        textSize(30);
-        rectMode(CENTER);
-        text("GAME OVER", 500, 200);
+        gameOver();
     }
 };
