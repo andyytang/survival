@@ -832,6 +832,8 @@ var howToPlayButton = new Button(390, 390, 250, 60);
 
 var playAgain = new Button(387, 340, 250, 60);
 
+var returnToMainMenu = new Button(387, 420, 250, 60);
+
 var generateMap = function(){
     
 bushes.splice(0,bushes.length);
@@ -881,6 +883,9 @@ for(var i = 0; i < 50; i++) {
 mouseClicked = function() {
     if(startButton.isMouseInside(mouseX, mouseY) && scene === -1){
         scene = 0;
+    }
+    if (returnToMainMenu.isMouseInside(mouseX, mouseY) && scene === 1){
+        scene = -1;
     }
     if (playAgain.isMouseInside(mouseX, mouseY) && scene === 1){
         grid = [];
@@ -973,7 +978,7 @@ var TitleScreen= function() {
     
     textSize(80);
     fill(0, 0, 0);
-    text("To Build A Fire", 276, 257);
+    text("To Build A Fire", 300, 250);
     
     /*stroke(80, 80, 80);
     strokeWeight(3);
@@ -999,6 +1004,13 @@ var TitleScreen= function() {
     textSize(25);
     text("TBaF v0.01", 25, 575);
     text("Created for a school project", 675, 575);
+        
+    pushMatrix();
+    rotate(-20);
+    textSize(25);
+    fill(255,255,255);
+    text("With splash texts!", 476,477);
+    popMatrix();
 };
 
 
@@ -1011,16 +1023,20 @@ var gameOver = function(){
     fill(255, 255, 255);
     textSize(35);
     text("Score: " + score + " seconds" , 394, 300);
+ 
     backgroundThing();
     playAgain.draw();
-    textSize(40);
-    text("Respawn", 440,380);
-    
+    returnToMainMenu.draw();
+    textSize(35);
+    text("Respawn", 451,380);
+    text("Title Menu", 441, 460);
 };
 
 noStroke();
+
 var draw = function() {
     if(scene === -1){
+        
         TitleScreen();
     }
     if(scene === 0) {
