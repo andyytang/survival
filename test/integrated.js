@@ -52,8 +52,6 @@ var sum = 0;
 var avg;
 var newMap = function(){
     var xoff = round(random(0, 4000));
-    var sum = 0;    
-    var grid = [];
     /**
      * Map generation algorithm: use noise to map out 40px by 40px
      * precipitation sections. Shown on large map when m is pressed.
@@ -69,8 +67,8 @@ var newMap = function(){
         }
         xoff += 0.02;
     }
-    var avg = sum/10000;
-    var stdev = 0;
+    avg = sum/10000;
+    stdev = 0;
     // Find standard deviation
     for(var i = 0; i < grid.length; i++) {
         stdev += Math.pow(abs(grid[i] - avg), 2);
@@ -620,6 +618,9 @@ bushes.add = function(x, y) {
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
         bushes[i].draw();
+        if(bushes[i].berries === 0) {
+            bushes.splice(i, 1);
+        }
     }
 };
 
@@ -698,12 +699,12 @@ rabbits.apply = function() {
         else if(rabbits[i].y > 4000) {
             rabbits[i].y -= 4000;
         }
+        if(rabbits[i].health <= 0) {
+            rabbits.splice(i, 1);
+        }
         if(rabbits[i].addrabbit) {
             rabbits.add();
             rabbits[i].addrabbit = false;
-        }
-        if(rabbits[i].health <= 0) {
-            rabbits.splice(i, 1);
         }
     }
 };
@@ -716,6 +717,7 @@ var wolf = function() {
     this.health = 200;
     this.hearradius = 600;
     this.food = 0;
+    this.target = -1;
     this.draw = function() {
         pushMatrix();
         translate(this.x, this.y);
@@ -745,33 +747,46 @@ var wolf = function() {
     };
     // Rudimentary: make it move towards player or rabbit
     this.update = function() {
-        this.completed = false;
-        for(var i = 0; i < rabbits.length; i++) {
-            if(dist(this.x, this.y, rabbits[i].x, rabbits[i].y) < this.hearradius) {
-                //Move towards the player accurately
-                this.dir = atan2(this.x - rabbits[i].x, rabbits[i].y - this.y) + 90;
-                this.x += cos(this.dir)*1.5;
-                this.y += sin(this.dir)*1.5;
-                if(dist(this.x, this.y, rabbits[i].x, rabbits[i].y) < 20 && frameCount%50 === 0) {
-                    rabbits[i].health -= 20;
-                    if(rabbits[i].health < 0) {
-                        this.food += 20;
+        if(this.target !== -1) {
+            this.dir = atan2(this.x - rabbits[this.target].x, rabbits[this.target].y - this.y) + 90;
+            this.x += cos(this.dir)*1.5;
+            this.y += sin(this.dir)*1.5;
+            if(dist(this.x, this.y, rabbits[this.target].x, rabbits[this.target].y) < 20 && frameCount%50 === 0) {
+                rabbits[this.target].health -= 20;
+                if(rabbits[this.target].health <= 0) {
+                    this.food += 20;
+                    this.target = -1;
+                }
+            }
+        }
+        else{
+            for(var i = 0; i < rabbits.length; i++) {
+                if(dist(this.x, this.y, rabbits[i].x, rabbits[i].y) < this.hearradius) {
+                    //Move towards the rabbit
+                    this.target = i;
+                    this.dir = atan2(this.x - rabbits[i].x, rabbits[i].y - this.y) + 90;
+                    this.x += cos(this.dir)*1.5;
+                    this.y += sin(this.dir)*1.5;
+                    if(dist(this.x, this.y, rabbits[i].x, rabbits[i].y) < 20 && frameCount%50 === 0) {
+                        rabbits[i].health -= 20;
+                        if(rabbits[i].health <= 0) {
+                            this.food += 20;
+                            this.target = -1;
+                        }
+                        break;
                     }
                 }
-                this.completed = true;
+            }
+            if(this.target !== -1 && dist(this.x, this.y, Player.x, Player.y) < this.hearradius) {
+                //Move towards the player accurately
+                this.dir = atan2(this.x - Player.x, Player.y - this.y) + 90;
+                this.x += cos(this.dir)*1.4;
+                this.y += sin(this.dir)*1.4;
+                if(dist(this.x, this.y, Player.x, Player.y) < 20 && frameCount%50 === 0) {
+                    Player.health -= 10;
+                }
             }
         }
-        if(!this.completed && dist(this.x, this.y, Player.x, Player.y) < this.hearradius) {
-            //Move towards the player accurately
-            this.dir = atan2(this.x - Player.x, Player.y - this.y) + 90;
-            this.x += cos(this.dir)*1.4;
-            this.y += sin(this.dir)*1.4;
-            if(dist(this.x, this.y, Player.x, Player.y) < 20 && frameCount%50 === 0) {
-                Player.health -= 10;
-            }
-        }
-        
-        
     };
 };
 wolves.add = function() {
@@ -1070,8 +1085,8 @@ mouseClicked = function() {
     }
 };
 
+newMap();
 generateMap();
-
     /***
      * Before I forget:
      * outpt[0] = number of items
@@ -1175,7 +1190,6 @@ var gameOver = function(){
 };
 
 noStroke();
-
 var draw = function() {
     if(scene === -1){
         
