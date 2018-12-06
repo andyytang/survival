@@ -36,11 +36,11 @@ var togglemap = false;
 var keys = [];
 var generator = new Random(1);
 textFont(createFont("Calibri"), 15);
-var scene = -1;
+var scene = -2;
 var timeOfDay = 0;
 //The actual inventory
-var obj_count = [0, 0, 0, 1, 0];
-var obj_order = [3];
+var obj_count = [0, 0, 0, 0, 0];
+var obj_order = [];
 var score = 0;
 }
 
@@ -749,7 +749,7 @@ var player = function(x, y) {
         }
     };
     this.starve = function(){
-        if (this.speedLimit === 4){
+        if (keys[16]){
             this.interval += 5;
         }
         this.interval++;
@@ -834,6 +834,8 @@ var playAgain = new Button(387, 340, 250, 60);
 
 var returnToMainMenu = new Button(387, 420, 250, 60);
 
+var back = new Button(422, 481, 250, 60);
+
 var generateMap = function(){
     
 bushes.splice(0,bushes.length);
@@ -887,6 +889,12 @@ mouseClicked = function() {
     if (returnToMainMenu.isMouseInside(mouseX, mouseY) && scene === 1){
         scene = -1;
     }
+    if (back.isMouseInside(mouseX, mouseY) && scene === -2){
+        scene = -1;
+    }
+    if(howToPlayButton.isMouseInside(mouseX, mouseY) && scene === -1){
+        scene = -2;
+    }
     if (playAgain.isMouseInside(mouseX, mouseY) && scene === 1){
         grid = [];
         generator = new Random(1);
@@ -895,6 +903,7 @@ mouseClicked = function() {
         newMap();
         fires.splice(0, fires.length);
         generateMap();
+        Player = new player(random(1000, 3000), random(1000, 3000));
         obj_count = [0, 0, 0, 0, 0];
         obj_order = [];
         timeOfDay = 0;
@@ -942,8 +951,6 @@ recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 3, 0, 0], [false, false]);
 recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 0], [false, false]);
 recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
 
-
-
 var backgroundThing = function(){
     
     var treePos = [[180, 100], [130, 300], [240, 490], [440, 590], [740, 510], [880, 380], [600, 30], [400, 10], [-5, 140], [40, -55], [30, 455], [100, 655], [620, 670], [930, 610], [900, -15], [1040, 220]];
@@ -974,6 +981,7 @@ var backgroundThing = function(){
     fire.draw();
 };
 var TitleScreen= function() {
+    textAlign(LEFT);
     background(110, 200, 90);
     
     textSize(80);
@@ -1013,34 +1021,62 @@ var TitleScreen= function() {
     popMatrix();
 };
 
+var Instructions = function(){
+    textAlign(LEFT);
+    background(214, 159, 19);
+    fill(255,255,255);
+    textSize(60);
+    text("Instructions", 400, 100);
+    textSize(25);
+    var textArray = ["WASD or arrow keys to move", "SHIFT to sprint, but you may lose food", "CLICK anywhere when nearby an object to harvest it (must face trees)", "When you have enough items for a recipe, recipes show up on left side of screen", "Recipes include fire (health), pickaxe, and trail mix", "Items in your inventory show up at bottom, can select by pressing 0-4", "You must select a fire or pickaxe to use it, click to place a fire (boosts health)", "Stone can only be harvested using a pickaxe"];
+    for(var i = 0; i < textArray.length; i++){
+        text("- " + textArray[i], 100, 160 + i * 40);
+    }
+    
+    back.draw();
+    textSize(30);
+    text("Return to Menu", 450, 520);
+};
+
+var padZero = function(num) {
+      var numDigits = 2;
+      var n = abs(num);
+      var zeros = max(0, numDigits - floor(n).toString().length );
+      var zeroString = pow(10, zeros).toString().substr(1);
+      return zeroString + n;
+};
 
 var gameOver = function(){
     background(50, 75, 40);
-    var score = floor(Player.interval/1000);
+    score = floor(Player.interval/100);
+    textAlign(CENTER);
     textSize(70);
     fill(255, 255, 255);
-    text("You died!", 376, 250);
+    text("You died!", 510, 250);
     fill(255, 255, 255);
     textSize(35);
-    text("Score: " + score + " seconds" , 394, 300);
- 
+    //Need to pad with zeros!
+    text("Time: " + floor(score / 60) + ":" + padZero(score % 60), 510, 300);
     backgroundThing();
     playAgain.draw();
     returnToMainMenu.draw();
     textSize(35);
-    text("Respawn", 451,380);
-    text("Title Menu", 441, 460);
+    text("Respawn", 510,380);
+    text("Title Menu", 510, 460);
 };
 
 noStroke();
 
 var draw = function() {
     if(scene === -1){
-        
         TitleScreen();
+    }
+    if(scene === -2){
+        Instructions();
     }
     if(scene === 0) {
         if(!togglemap) {
+            textAlign(LEFT);
             switch(timeOfDay){
                 case 0: 
                  background(120, 180, 94);
@@ -1092,6 +1128,7 @@ var draw = function() {
         if(togglemap) {
             background(120, 180, 94);
             rectMode(CORNER);
+            textAlign(LEFT);
             pushMatrix();
             cam.view(Player);
             stroke(255, 0, 0);
