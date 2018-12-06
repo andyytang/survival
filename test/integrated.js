@@ -559,7 +559,7 @@ var stone = function(x, y) {
         ellipse(this.x, this.y, this.r, this.r);
     };
     this.harvest = function()  {
-        this.r -= 14;
+        this.r -= 7;
     };
 };
 var stones = [];
@@ -642,8 +642,27 @@ var rabbit = function(number) {
     this.food = 0;
     this.addrabbit = false;
     this.draw = function() {
-        fill(239,222,205);
-        ellipse(this.x, this.y, this.r, this.r);
+        stroke(1);
+        fill(239,222,205);//body
+        rect(this.x, this.y, 17, 13);
+        
+        //back legs
+        rect(this.x+9, this.y-1, 7, 1);
+        rect(this.x+9, this.y+13, 7, 1);
+        
+        //front legs
+        rect(this.x, this.y-1, 4, 1);
+        rect(this.x, this.y+13, 4, 1);
+        
+        //tail
+        rect(this.x+17, this.y+3, 3, 7);
+        
+        //head
+        rect(this.x-9, this.y+1, 9, 11);
+        
+        //ears
+        rect(this.x-4, this.y+2, 2, 3);
+        rect(this.x-4, this.y+8, 2, 3);
     };
     // Rudimentary: make it go towards bushes and avoid wolves
     this.update = function() {
@@ -662,7 +681,7 @@ var rabbit = function(number) {
             this.dir = atan2(this.x - bushes[this.minbush].x, bushes[this.minbush].y - this.y) + round(random(-10, 10)) + 90;
             this.x += cos(this.dir);
             this.y += sin(this.dir);
-            if(dist(this.x, this.y, bushes[this.minbush].x, bushes[this.minbush].y) < 10 && frameCount % 40 === this.number) {
+            if(dist(this.x, this.y, bushes[this.minbush].x, bushes[this.minbush].y) < 20 && frameCount % 40 === this.number) {
                 bushes[this.minbush].harvest();
                 this.food++;
             }
@@ -702,7 +721,7 @@ rabbits.apply = function() {
         if(rabbits[i].health <= 0) {
             rabbits.splice(i, 1);
         }
-        if(rabbits[i].addrabbit) {
+        if(i < rabbits.length && rabbits[i].addrabbit && rabbits.length < 40) {
             rabbits.add();
             rabbits[i].addrabbit = false;
         }
@@ -777,7 +796,7 @@ var wolf = function() {
                     }
                 }
             }
-            if(this.target !== -1 && dist(this.x, this.y, Player.x, Player.y) < this.hearradius) {
+            if(this.target === -1 && dist(this.x, this.y, Player.x, Player.y) < this.hearradius) {
                 //Move towards the player accurately
                 this.dir = atan2(this.x - Player.x, Player.y - this.y) + 90;
                 this.x += cos(this.dir)*1.4;
@@ -799,11 +818,11 @@ wolves.apply = function() {
     }
 };
 
-for(var i = 0; i < 5; i++) {
+for(var i = 0; i < 3; i++) {
     wolves.add();
 }
 
-for(var i = 0; i < 2; i++) {
+for(var i = 0; i < 4; i++) {
     rabbits.add();
 }
 
@@ -819,6 +838,7 @@ var player = function(x, y) {
     this.health = 50;
     this.food = 50;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
+    this.negative = false;
     this.speedLimit = 3;
     this.bars = function() {
         rectMode(LEFT);
@@ -834,12 +854,17 @@ var player = function(x, y) {
         rect(342, 500, this.food*2.1, 12);
     };
     this.dayChange = function(){
-        if (this.interval % 10000 === 0 && this.interval > 0){
-            if (timeOfDay < 4){
-                timeOfDay++;
-            } else {
-                timeOfDay = 0;
-            }
+        if(this.negative) {
+            timeOfDay -= 0.05;
+        }
+        else { 
+            timeOfDay += 0.05;
+        }
+        if(timeOfDay > 180) {
+            this.negative = true;
+        }
+        if(timeOfDay < 10) {
+            this.negative = false;
         }
     };
     this.draw = function() {
@@ -997,6 +1022,20 @@ bushes.splice(0,bushes.length);
 trees.splice(0,bushes.length);
 stones.splice(0, stones.length);
 
+var centerx = random(1000, 3000);
+var centery = random(1000, 3000);
+for(var i = 0; i < 50; i++) {
+    var a = random(centerx - 300, centerx + 300);
+    var b = random(centery - 300, centery + 300);
+    stones.add(a,b);
+}
+
+for(var i = -9; i <= 9; i++) {
+    for(var j = -9; j <= 9; j++) {
+        grid[round(centerx/40)*100 + i*100 + round(centery/40) + j] = 0; 
+    }
+}
+
 for(var i = 0; i < 450; i++) {
     var x = random(0, 4000);
     var y = random(0, 4000);
@@ -1009,9 +1048,15 @@ for(var i = 0; i < 450; i++) {
     }
     trees.add(x, y, random(3, 5.5));
 }
-        
 
-for(var i = 0; i < 150; i++) {
+
+for(var i = -9; i <= 9; i++) {
+    for(var j = -9; j <= 9; j++) {
+        grid[round(centerx/40)*100 + i*100 + round(centery/40) + j] = 300; 
+    }
+}        
+
+for(var i = 0; i < 250; i++) {
     var a = random(0, 4000);
     var b = random(0, 4000);
     var position = round(a/40)*100 + round(b/40);
@@ -1028,12 +1073,10 @@ for (var i = 0; i < bushes.length; i++){
     bushes[i].randomBerries();
 }
 
-var centerx = random(1000, 3000);
-var centery = random(1000, 3000);
-for(var i = 0; i < 50; i++) {
-    var a = random(centerx - 200, centerx + 200);
-    var b = random(centery - 200, centery + 200);
-    stones.add(a,b);
+for(var i = -9; i <= 9; i++) {
+    for(var j = -9; j <= 9; j++) {
+        grid[round(centerx/40)*100 + i*100 + round(centery/40) + j] = 100; 
+    }
 }
 };
 
@@ -1197,26 +1240,19 @@ var draw = function() {
     }
     if(scene === 0) {
         if(!togglemap) {
-            switch(timeOfDay){
-                case 0: 
-                 background(120, 180, 94);
-                    break;
-                case 1:
-                 background(214, 159, 19);
-                   break;
-                case 2:
-                  background(50, 80, 40);
-                  break;
-                case 3:
-                 background(214, 159, 19);
-                   break;
-                case 4: 
-                 background(120, 180, 94);
-                    break;
-                default:
-                background(120, 180, 94);
-                break;
+            if(frameCount % 50 === 0) {
+                var a = random(0, 4000);
+                var b = random(0, 4000);
+                var position = round(a/40)*100 + round(b/40);
+                var num = generator.nextGaussian();
+                while(grid[position] > stdev*num + avg){
+                    a = random(0, 4000);
+                    b = random(0, 4000);
+                    position = round(a/40)*100 + round(b/40);
+    }
+    bushes.add(a,b);
             }
+            background(20 + timeOfDay/2, 20 + timeOfDay, 50 + timeOfDay/10);
             rectMode(CORNER);
             Player.stats();
             pushMatrix();
