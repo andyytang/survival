@@ -22,8 +22,8 @@
  * 0 = wood
  * 1 = berry
  * 2 = stone
- * 3 = pickaxe 
- * 4 = small campfire
+ * 3 = pickaxe (WIP)
+ * 4 = campfire
  * */
 
 //@GLOBAL VARIABLES
@@ -35,13 +35,13 @@ var mapsize = 4000;
 var togglemap = false;
 var keys = [];
 var generator = new Random(1);
-textFont(createFont("Calibri"), 15);
 var scene = -2;
 var timeOfDay = 0;
 //The actual inventory
-var obj_count = [0, 0, 0, 0, 0];
-var obj_order = [];
+var obj_count = [0, 0, 0, 1, 0];
+var obj_order = [3];
 var score = 0;
+textFont(createFont("Calibri"), 15);
 }
 
 //@MAP GENERATION
@@ -51,30 +51,30 @@ var stdev = 0;
 var sum = 0;  
 var avg;
 var newMap = function(){
-var xoff = round(random(0, 4000));
-
-/**
- * Map generation algorithm: use noise to map out 40px by 40px
- * precipitation sections. Shown on large map when m is pressed.
-**/
-for (var x = 0; x < 100; x ++) {
-    var yoff = xoff;
-    for(var y = 0; y < 100; y ++) {
-        noStroke();
-        var bright = map(noise(xoff, yoff), 0, 1, 0, 255);
-        grid[x*100 + y] = bright;
-        yoff += 0.02;
-        sum += bright;
+    var xoff = round(random(0, 4000));
+    /**
+     * Map generation algorithm: use noise to map out 40px by 40px
+     * precipitation sections. Shown on large map when m is pressed.
+    **/
+    for (var x = 0; x < 100; x ++) {
+        var yoff = xoff;
+        for(var y = 0; y < 100; y ++) {
+            noStroke();
+            var bright = map(noise(xoff, yoff), 0, 1, 0, 255);
+            grid[x*100 + y] = bright;
+            yoff += 0.02;
+            sum += bright;
+        }
+        xoff += 0.02;
     }
-    xoff += 0.02;
-}
-var avg = sum/10000;
-// Find standard deviation
-for(var i = 0; i < grid.length; i++) {
-    stdev += Math.pow(abs(grid[i] - avg), 2);
-stdev /= 10000;
-stdev = Math.sqrt(stdev);
-}
+    avg = sum/10000;
+    stdev = 0;
+    // Find standard deviation
+    for(var i = 0; i < grid.length; i++) {
+        stdev += Math.pow(abs(grid[i] - avg), 2);
+    }
+    stdev /= 10000;
+    stdev = Math.sqrt(stdev);
 };
 //@KEY INTERACTION
 {
@@ -559,7 +559,7 @@ var stone = function(x, y) {
         ellipse(this.x, this.y, this.r, this.r);
     };
     this.harvest = function()  {
-        this.r -= 14;
+        this.r -= 7;
     };
 };
 var stones = [];
@@ -590,7 +590,7 @@ for(var i = 0; i < randomLength; i++){
 }
     };
     this.draw = function() {
-        //if(view(this)) { 
+        if(view(this)) { 
             noStroke();
             fill(19, 145, 21);
              if (this.berries.length !== 0){
@@ -603,7 +603,7 @@ for(var i = 0; i < randomLength; i++){
                ellipse(this.berries[i][0], this.berries[i][1], this.r/5, this.r/5);
             }
              }
-        //}
+        }
     };
     this.harvest = function()  {
         this.berries.splice(floor(random(0,1)*this.berries.length), 1);
@@ -618,39 +618,262 @@ bushes.add = function(x, y) {
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
         bushes[i].draw();
+        if(bushes[i].berries <= 0) {
+            bushes.splice(i, 1);
+        }
     }
 };
 
-{
+
+//For the rabbit
+var wolves = [];
+
+//rabbit -- WIP
+var rabbit = function(number) {
+    this.number = number;
+    this.x = random(0, 4000);
+    this.y = random(0, 4000);
+    this.r = 40;
+    this.health = 100;
+    this.viewradius = 300;
+    this.dir = random(0, 360);
+    this.minbush = -1;
+    this.minlength = this.viewradius;
+    this.food = 0;
+    this.addrabbit = false;
+    this.draw = function() {
+        stroke(1);
+        fill(239,222,205);//body
+        rect(this.x, this.y, 17, 13);
+        
+        //back legs
+        rect(this.x+9, this.y-1, 7, 1);
+        rect(this.x+9, this.y+13, 7, 1);
+        
+        //front legs
+        rect(this.x, this.y-1, 4, 1);
+        rect(this.x, this.y+13, 4, 1);
+        
+        //tail
+        rect(this.x+17, this.y+3, 3, 7);
+        
+        //head
+        rect(this.x-9, this.y+1, 9, 11);
+        
+        //ears
+        rect(this.x-4, this.y+2, 2, 3);
+        rect(this.x-4, this.y+8, 2, 3);
+    };
+    // Rudimentary: make it go towards bushes and avoid wolves
+    this.update = function() {
+        // Based on player location
+        this.minbush = -1;
+        this.minlength = 300;
+        if(frameCount % 400 === 0) {
+            this.food--;
+        }
+        for(var i = 0; i < bushes.length; i++) {
+            //In view
+            if(dist(this.x, this.y, bushes[i].x, bushes[i].y) < this.minlength) {
+                this.minlength = dist(this.x, this.y, bushes[i].x, bushes[i].y);
+                this.minbush = i;
+            }
+        }
+        if(this.minbush !== -1) {
+            this.dir = atan2(this.x - bushes[this.minbush].x, bushes[this.minbush].y - this.y) + round(random(-10, 10)) + 90;
+            this.x += cos(this.dir);
+            this.y += sin(this.dir);
+            if(dist(this.x, this.y, bushes[this.minbush].x, bushes[this.minbush].y) < 20 && frameCount % 40 === (this.number%40)) {
+                bushes[this.minbush].harvest();
+                this.food += 10;
+            }
+            if(this.food === 90) {
+                this.food = 0;
+                this.addrabbit = true;
+            }
+        }
+        else {
+            this.dir += random(-2, 2);
+            this.x += cos(this.dir);
+            this.y += sin(this.dir);
+        }
+    };
+};
+//Darn english grammar
+var rabbits = [];
+rabbits.add = function() {
+    rabbits.push(new rabbit(rabbits.length));
+};
+rabbits.apply = function() {
+    for(var i = 0; i < rabbits.length; i++) {
+        rabbits[i].draw();
+        rabbits[i].update();
+        if(rabbits[i].x < 0) {
+            rabbits[i].x += 4000;
+        }
+        else if(rabbits[i].x > 4000) {
+            rabbits[i].x -= 4000;
+        }
+        else if(rabbits[i].y < 0) {
+            rabbits[i].y += 4000;
+        }
+        else if(rabbits[i].y > 4000) {
+            rabbits[i].y -= 4000;
+        }
+        if(i < rabbits.length && rabbits[i].addrabbit && rabbits.length < 40) {
+            //println("Rabbit " + rabbits.length + "added by rabbit" + i);
+            rabbits.add();
+            rabbits[i].addrabbit = false;
+        }
+        if(i < rabbits.length && rabbits[i].addrabbit) {
+            rabbits[i].addrabbit = false;
+        }
+        if(rabbits[i].health <= 0) {
+            //println("Rabbit " + i + "deleted out of " + rabbits.length);
+            rabbits.splice(i, 1);
+            i--;
+        }
+    }
+};
+
 //Wolves -- WIP
 var wolf = function() {
     this.x = random(0, 4000);
     this.y = random(0, 4000);
+    this.dir = random(0, 360);
     this.health = 200;
-    this.viewradius = 800;
+    this.hearradius = 600;
+    this.food = 0;
+    this.target = -1;
+    this.addwolf = false;
     this.draw = function() {
-        fill(255, 0, 0);
-    };
-    // Rudimentary: make it move towards player or deer
-    this.update = function() {
+        pushMatrix();
+        translate(this.x, this.y);
+        rotate(this.dir + 180);
+        //body
+        stroke(50, 50, 50);
+        fill(214, 214, 214);
+        rect(0, 0, 30, 13);
+        rect(0, -3, 12, 19);
         
+        //head
+        rect(-8, -1, 8, 15);
+        
+        //ears
+        stroke(0, 0, 0);
+        rect(-3, 0, 1, 4);
+        rect(-3, 9, 1, 4);
+        
+        //snout
+        stroke(50, 50, 50);
+        fill(214, 214, 214);
+        rect(-16, 3, 8, 8);
+        //tail
+        fill(212, 212, 212);
+        rect(30, 5, 8, 3);
+        popMatrix();
+    };
+    // Rudimentary: make it move towards player or rabbit
+    this.update = function() {
+        if(frameCount % 500 === 0) {
+            this.food--;
+        }
+        if(this.target >= rabbits.length) {
+            this.target = -1;
+        }
+        if(this.target !== -1) {
+            this.dir = atan2(this.x - rabbits[this.target].x, rabbits[this.target].y - this.y) + 90;
+            this.x += cos(this.dir)*1.5;
+            this.y += sin(this.dir)*1.5;
+            if(dist(this.x, this.y, rabbits[this.target].x, rabbits[this.target].y) < 20 && frameCount%50 === 0) {
+                rabbits[this.target].health -= 20;
+                this.food += 10;
+                if(rabbits[this.target].health <= 0) {
+                    this.target = -1;
+                }
+            }
+            if(this.food >= 50) {
+                this.food -= 50;
+                this.addwolf = true;
+            }
+        }
+        else{
+            for(var i = 0; i < rabbits.length; i++) {
+                if(dist(this.x, this.y, rabbits[i].x, rabbits[i].y) < this.hearradius) {
+                    //Move towards the rabbit
+                    this.target = i;
+                    this.dir = atan2(this.x - rabbits[i].x, rabbits[i].y - this.y) + 90;
+                    this.x += cos(this.dir)*1.5;
+                    this.y += sin(this.dir)*1.5;
+                    if(dist(this.x, this.y, rabbits[i].x, rabbits[i].y) < 20 && frameCount%50 === 0) {
+                        rabbits[i].health -= 20;
+                        this.food += 10;
+                        if(rabbits[i].health <= 0) {
+                            this.target = -1;
+                        }
+                        if(this.food >= 50) {
+                            this.food -= 50;
+                            this.addwolf = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            if(this.target === -1 && dist(this.x, this.y, Player.x, Player.y) < this.hearradius && !togglemap) {
+                //Move towards the player accurately
+                this.dir = atan2(this.x - Player.x, Player.y - this.y) + 90;
+                this.x += cos(this.dir)*1.4;
+                this.y += sin(this.dir)*1.4;
+                if(dist(this.x, this.y, Player.x, Player.y) < 20 && frameCount%50 === 0) {
+                    Player.health -= 10;
+                }
+            }
+            else {
+                this.dir += random(-2, 2);
+                this.x += cos(this.dir);
+                this.y += sin(this.dir);
+            }
+        }
     };
 };
- //Deer -- WIP
-var deer = function() {
-    this.x = random(0, 4000);
-    this.y = random(0, 4000);
-    this.health = 100;
-    this.viewradius = 200;
-    this.draw = function() {
-        
-    };
-    // Rudimentary: make it go towards bushes and avoid wolves
-    this.update = function() {
-        
-    };
+wolves.add = function() {
+    wolves.push(new wolf());
 };
+wolves.apply = function() {
+    for(var i = 0; i < wolves.length; i++) {
+        wolves[i].draw();
+        wolves[i].update();
+        if(wolves[i].x < 0) {
+            wolves[i].x += 4000;
+        }
+        else if(wolves[i].x > 4000) {
+            wolves[i].x -= 4000;
+        }
+        else if(wolves[i].y < 0) {
+            wolves[i].y += 4000;
+        }
+        else if(wolves[i].y > 4000) {
+            wolves[i].y -= 4000;
+        }
+        if(wolves[i].addwolf && wolves.length < 10) {
+            wolves.add();
+            wolves[i].addwolf = false;
+        }
+        if(wolves[i].addwolf) {
+            wolves[i].addwolf = false;
+        }
+    }
+};
+
+for(var i = 0; i < 3; i++) {
+    wolves.add();
 }
+
+for(var i = 0; i < 10; i++) {
+    rabbits.add();
+}
+
+
 var player = function(x, y) {
     this.x = x;
     this.y = y;
@@ -662,6 +885,7 @@ var player = function(x, y) {
     this.health = 50;
     this.food = 50;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
+    this.negative = false;
     this.speedLimit = 3;
     this.bars = function() {
         rectMode(LEFT);
@@ -677,12 +901,17 @@ var player = function(x, y) {
         rect(342, 500, this.food*2.1, 12);
     };
     this.dayChange = function(){
-        if (this.interval % 10000 === 0 && this.interval > 0){
-            if (timeOfDay < 4){
-                timeOfDay++;
-            } else {
-                timeOfDay = 0;
-            }
+        if(this.negative) {
+            timeOfDay -= 0.05;
+        }
+        else { 
+            timeOfDay += 0.05;
+        }
+        if(timeOfDay > 180) {
+            this.negative = true;
+        }
+        if(timeOfDay < 10) {
+            this.negative = false;
         }
     };
     this.draw = function() {
@@ -749,7 +978,7 @@ var player = function(x, y) {
         }
     };
     this.starve = function(){
-        if (keys[16]){
+        if (this.speedLimit === 4){
             this.interval += 5;
         }
         this.interval++;
@@ -842,6 +1071,20 @@ bushes.splice(0,bushes.length);
 trees.splice(0,bushes.length);
 stones.splice(0, stones.length);
 
+var centerx = random(1000, 3000);
+var centery = random(1000, 3000);
+for(var i = 0; i < 50; i++) {
+    var a = random(centerx - 300, centerx + 300);
+    var b = random(centery - 300, centery + 300);
+    stones.add(a,b);
+}
+
+for(var i = -9; i <= 9; i++) {
+    for(var j = -9; j <= 9; j++) {
+        grid[round(centerx/40)*100 + i*100 + round(centery/40) + j] = 0; 
+    }
+}
+
 for(var i = 0; i < 450; i++) {
     var x = random(0, 4000);
     var y = random(0, 4000);
@@ -854,9 +1097,15 @@ for(var i = 0; i < 450; i++) {
     }
     trees.add(x, y, random(3, 5.5));
 }
-        
 
-for(var i = 0; i < 150; i++) {
+
+for(var i = -9; i <= 9; i++) {
+    for(var j = -9; j <= 9; j++) {
+        grid[round(centerx/40)*100 + i*100 + round(centery/40) + j] = 300; 
+    }
+}        
+
+for(var i = 0; i < 250; i++) {
     var a = random(0, 4000);
     var b = random(0, 4000);
     var position = round(a/40)*100 + round(b/40);
@@ -873,12 +1122,10 @@ for (var i = 0; i < bushes.length; i++){
     bushes[i].randomBerries();
 }
 
-var centerx = random(1000, 3000);
-var centery = random(1000, 3000);
-for(var i = 0; i < 50; i++) {
-    var a = random(centerx - 200, centerx + 200);
-    var b = random(centery - 200, centery + 200);
-    stones.add(a,b);
+for(var i = -9; i <= 9; i++) {
+    for(var j = -9; j <= 9; j++) {
+        grid[round(centerx/40)*100 + i*100 + round(centery/40) + j] = 100; 
+    }
 }
 };
 
@@ -903,7 +1150,6 @@ mouseClicked = function() {
         newMap();
         fires.splice(0, fires.length);
         generateMap();
-        Player = new player(random(1000, 3000), random(1000, 3000));
         obj_count = [0, 0, 0, 0, 0];
         obj_order = [];
         timeOfDay = 0;
@@ -937,8 +1183,8 @@ mouseClicked = function() {
     }
 };
 
+newMap();
 generateMap();
-
     /***
      * Before I forget:
      * outpt[0] = number of items
@@ -950,6 +1196,8 @@ generateMap();
 recipes.add([15, 0, 0, 0, 0], "pickaxe", [1, 3, 0, 0], [false, false]);
 recipes.add([30, 0, 5, 0, 0], "fire", [1, 4, 0, 0], [false, false]);
 recipes.add([0, 3, 0, 0, 0], "trail mix", [0, 0, 5, 0], [false, false]);
+
+
 
 var backgroundThing = function(){
     
@@ -980,6 +1228,7 @@ var backgroundThing = function(){
     var fire = new SmallFire(833, 208, true);
     fire.draw();
 };
+
 var TitleScreen= function() {
     textAlign(LEFT);
     background(110, 200, 90);
@@ -1037,8 +1286,7 @@ var Instructions = function(){
     textSize(30);
     text("Return to Menu", 450, 520);
 };
-
-var padZero = function(num) {
+ var padZero = function(num) {
       var numDigits = 2;
       var n = abs(num);
       var zeros = max(0, numDigits - floor(n).toString().length );
@@ -1066,9 +1314,9 @@ var gameOver = function(){
 };
 
 noStroke();
-
 var draw = function() {
     if(scene === -1){
+        
         TitleScreen();
     }
     if(scene === -2){
@@ -1076,27 +1324,20 @@ var draw = function() {
     }
     if(scene === 0) {
         if(!togglemap) {
-            textAlign(LEFT);
-            switch(timeOfDay){
-                case 0: 
-                 background(120, 180, 94);
-                    break;
-                case 1:
-                 background(214, 159, 19);
-                   break;
-                case 2:
-                  background(50, 80, 40);
-                  break;
-                case 3:
-                 background(214, 159, 19);
-                   break;
-                case 4: 
-                 background(120, 180, 94);
-                    break;
-                default:
-                background(120, 180, 94);
-                break;
+            if(frameCount % 100 === 0) {
+                var a = random(0, 4000);
+                var b = random(0, 4000);
+                var position = round(a/40)*100 + round(b/40);
+                var num = generator.nextGaussian();
+                while(grid[position] > stdev*num + avg){
+                    a = random(0, 4000);
+                    b = random(0, 4000);
+                    position = round(a/40)*100 + round(b/40);
+                }
+                bushes.add(a,b);
+                //println(bushes.length + ", " + wolves.length + ", " + rabbits.length);
             }
+            background(20 + timeOfDay/2, 20 + timeOfDay, 50 + timeOfDay/10);
             rectMode(CORNER);
             Player.stats();
             pushMatrix();
@@ -1111,6 +1352,8 @@ var draw = function() {
             Player.draw();
             trees.apply();
             stones.apply();
+            rabbits.apply();
+            wolves.apply();
             Player.update();
             Player.starve();
             Player.dayChange();
@@ -1126,9 +1369,21 @@ var draw = function() {
             }
         }
         if(togglemap) {
+            if(frameCount % 100 === 0) {
+                var a = random(0, 4000);
+                var b = random(0, 4000);
+                var position = round(a/40)*100 + round(b/40);
+                var num = generator.nextGaussian();
+                while(grid[position] > stdev*num + avg){
+                    a = random(0, 4000);
+                    b = random(0, 4000);
+                    position = round(a/40)*100 + round(b/40);
+                }
+                bushes.add(a,b);
+                //println(bushes.length + ", " + wolves.length + ", " + rabbits.length);
+            }
             background(120, 180, 94);
             rectMode(CORNER);
-            textAlign(LEFT);
             pushMatrix();
             cam.view(Player);
             stroke(255, 0, 0);
@@ -1141,12 +1396,31 @@ var draw = function() {
             trees.apply();
             stones.apply();
             fires.apply();
+            rabbits.apply();
+            wolves.apply();
             popMatrix();
             Player.stats();
             rectMode(CENTER);
             inventory.draw();
             rectMode(CORNER);
             recipes.apply();
+            //Labels
+            fill(0);
+            text("Welcome to: God Mode", 420, 20);
+            fill(255, 0, 0);
+            text("■ - Berries", 420, 50);
+            fill(0, 255, 0);
+            text("■ - Trees", 420, 80);
+            fill(255);
+            text("■ - Stone", 420, 110);
+            fill(0, 255, 255);
+            text("■ - Rabbit Targeted", 420, 140);
+            fill(255, 0, 255);
+            text("■ - Bush Targeted", 420, 170);
+            fill(255, 255, 0);
+            text("■ - Wolf", 420, 200);
+            fill(0, 0, 255);
+            text("■ - Rabbit", 420, 230);
             for(var i = 0; i < 100; i++) {
                 for(var j = 0; j < 100; j++) {
                     noStroke();
@@ -1166,6 +1440,23 @@ var draw = function() {
             for(var j = 0; j < stones.length; j++) {
                 stroke(255, 255, 255);
                 point(stones[j].x/10, stones[j].y/10);
+            }
+            for(var i = 0; i < rabbits.length; i++) {
+                stroke(0, 0, 255);
+                point(rabbits[i].x/10, rabbits[i].y/10);
+                stroke(255, 0, 255);
+                if(rabbits[i].minbush !== -1) {
+                    point(bushes[rabbits[i].minbush].x/10, bushes[rabbits[i].minbush].y/10);
+                }
+
+            }
+            for(var i = 0; i < wolves.length; i++) {
+                stroke(255,255,0);
+                point(wolves[i].x/10, wolves[i].y/10);
+                if(wolves[i].target !== -1) {
+                    stroke(0, 255, 255);
+                    point(rabbits[wolves[i].target].x/10, rabbits[wolves[i].target].y/10);
+                }
             }
             pushMatrix();
             fill(0, 0, 0);
