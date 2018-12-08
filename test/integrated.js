@@ -41,7 +41,7 @@ var timeOfDay = 0;
 var obj_count = [0, 0, 0, 1, 0];
 var obj_order = [3];
 var score = 0;
-textFont(createFont("monospace"), 15);
+textFont(createFont("Calibri"), 15);
 }
 
 //@MAP GENERATION
@@ -590,7 +590,7 @@ for(var i = 0; i < randomLength; i++){
 }
     };
     this.draw = function() {
-        //if(view(this)) { 
+        if(view(this)) { 
             noStroke();
             fill(19, 145, 21);
              if (this.berries.length !== 0){
@@ -603,7 +603,7 @@ for(var i = 0; i < randomLength; i++){
                ellipse(this.berries[i][0], this.berries[i][1], this.r/5, this.r/5);
             }
              }
-        //}
+        }
     };
     this.harvest = function()  {
         this.berries.splice(floor(random(0,1)*this.berries.length), 1);
@@ -618,7 +618,7 @@ bushes.add = function(x, y) {
 bushes.apply = function() {
     for(var i = 0; i < bushes.length; i++) {
         bushes[i].draw();
-        if(bushes[i].berries === 0) {
+        if(bushes[i].berries <= 0) {
             bushes.splice(i, 1);
         }
     }
@@ -636,7 +636,7 @@ var rabbit = function(number) {
     this.r = 40;
     this.health = 100;
     this.viewradius = 300;
-    this.dir = 0;
+    this.dir = random(0, 360);
     this.minbush = -1;
     this.minlength = this.viewradius;
     this.food = 0;
@@ -669,7 +669,9 @@ var rabbit = function(number) {
         // Based on player location
         this.minbush = -1;
         this.minlength = 300;
-        
+        if(frameCount % 400 === 0) {
+            this.food--;
+        }
         for(var i = 0; i < bushes.length; i++) {
             //In view
             if(dist(this.x, this.y, bushes[i].x, bushes[i].y) < this.minlength) {
@@ -681,11 +683,11 @@ var rabbit = function(number) {
             this.dir = atan2(this.x - bushes[this.minbush].x, bushes[this.minbush].y - this.y) + round(random(-10, 10)) + 90;
             this.x += cos(this.dir);
             this.y += sin(this.dir);
-            if(dist(this.x, this.y, bushes[this.minbush].x, bushes[this.minbush].y) < 20 && frameCount % 40 === this.number) {
+            if(dist(this.x, this.y, bushes[this.minbush].x, bushes[this.minbush].y) < 20 && frameCount % 40 === (this.number%40)) {
                 bushes[this.minbush].harvest();
-                this.food++;
+                this.food += 10;
             }
-            if(this.food === 10) {
+            if(this.food === 90) {
                 this.food = 0;
                 this.addrabbit = true;
             }
@@ -718,12 +720,18 @@ rabbits.apply = function() {
         else if(rabbits[i].y > 4000) {
             rabbits[i].y -= 4000;
         }
-        if(rabbits[i].health <= 0) {
-            rabbits.splice(i, 1);
-        }
         if(i < rabbits.length && rabbits[i].addrabbit && rabbits.length < 40) {
+            //println("Rabbit " + rabbits.length + "added by rabbit" + i);
             rabbits.add();
             rabbits[i].addrabbit = false;
+        }
+        if(i < rabbits.length && rabbits[i].addrabbit) {
+            rabbits[i].addrabbit = false;
+        }
+        if(rabbits[i].health <= 0) {
+            //println("Rabbit " + i + "deleted out of " + rabbits.length);
+            rabbits.splice(i, 1);
+            i--;
         }
     }
 };
@@ -732,15 +740,16 @@ rabbits.apply = function() {
 var wolf = function() {
     this.x = random(0, 4000);
     this.y = random(0, 4000);
-    this.dir = 0;
+    this.dir = random(0, 360);
     this.health = 200;
     this.hearradius = 600;
     this.food = 0;
     this.target = -1;
+    this.addwolf = false;
     this.draw = function() {
         pushMatrix();
         translate(this.x, this.y);
-        rotate(this.dir+180);
+        rotate(this.dir + 180);
         //body
         stroke(50, 50, 50);
         fill(214, 214, 214);
@@ -766,16 +775,26 @@ var wolf = function() {
     };
     // Rudimentary: make it move towards player or rabbit
     this.update = function() {
+        if(frameCount % 500 === 0) {
+            this.food--;
+        }
+        if(this.target >= rabbits.length) {
+            this.target = -1;
+        }
         if(this.target !== -1) {
             this.dir = atan2(this.x - rabbits[this.target].x, rabbits[this.target].y - this.y) + 90;
             this.x += cos(this.dir)*1.5;
             this.y += sin(this.dir)*1.5;
             if(dist(this.x, this.y, rabbits[this.target].x, rabbits[this.target].y) < 20 && frameCount%50 === 0) {
                 rabbits[this.target].health -= 20;
+                this.food += 10;
                 if(rabbits[this.target].health <= 0) {
-                    this.food += 20;
                     this.target = -1;
                 }
+            }
+            if(this.food >= 50) {
+                this.food -= 50;
+                this.addwolf = true;
             }
         }
         else{
@@ -788,15 +807,19 @@ var wolf = function() {
                     this.y += sin(this.dir)*1.5;
                     if(dist(this.x, this.y, rabbits[i].x, rabbits[i].y) < 20 && frameCount%50 === 0) {
                         rabbits[i].health -= 20;
+                        this.food += 10;
                         if(rabbits[i].health <= 0) {
-                            this.food += 20;
                             this.target = -1;
+                        }
+                        if(this.food >= 50) {
+                            this.food -= 50;
+                            this.addwolf = true;
                         }
                         break;
                     }
                 }
             }
-            if(this.target === -1 && dist(this.x, this.y, Player.x, Player.y) < this.hearradius) {
+            if(this.target === -1 && dist(this.x, this.y, Player.x, Player.y) < this.hearradius && !togglemap) {
                 //Move towards the player accurately
                 this.dir = atan2(this.x - Player.x, Player.y - this.y) + 90;
                 this.x += cos(this.dir)*1.4;
@@ -804,6 +827,11 @@ var wolf = function() {
                 if(dist(this.x, this.y, Player.x, Player.y) < 20 && frameCount%50 === 0) {
                     Player.health -= 10;
                 }
+            }
+            else {
+                this.dir += random(-2, 2);
+                this.x += cos(this.dir);
+                this.y += sin(this.dir);
             }
         }
     };
@@ -815,6 +843,25 @@ wolves.apply = function() {
     for(var i = 0; i < wolves.length; i++) {
         wolves[i].draw();
         wolves[i].update();
+        if(wolves[i].x < 0) {
+            wolves[i].x += 4000;
+        }
+        else if(wolves[i].x > 4000) {
+            wolves[i].x -= 4000;
+        }
+        else if(wolves[i].y < 0) {
+            wolves[i].y += 4000;
+        }
+        else if(wolves[i].y > 4000) {
+            wolves[i].y -= 4000;
+        }
+        if(wolves[i].addwolf && wolves.length < 10) {
+            wolves.add();
+            wolves[i].addwolf = false;
+        }
+        if(wolves[i].addwolf) {
+            wolves[i].addwolf = false;
+        }
     }
 };
 
@@ -822,7 +869,7 @@ for(var i = 0; i < 3; i++) {
     wolves.add();
 }
 
-for(var i = 0; i < 4; i++) {
+for(var i = 0; i < 10; i++) {
     rabbits.add();
 }
 
@@ -1240,7 +1287,7 @@ var draw = function() {
     }
     if(scene === 0) {
         if(!togglemap) {
-            if(frameCount % 50 === 0) {
+            if(frameCount % 100 === 0) {
                 var a = random(0, 4000);
                 var b = random(0, 4000);
                 var position = round(a/40)*100 + round(b/40);
@@ -1249,8 +1296,9 @@ var draw = function() {
                     a = random(0, 4000);
                     b = random(0, 4000);
                     position = round(a/40)*100 + round(b/40);
-    }
-    bushes.add(a,b);
+                }
+                bushes.add(a,b);
+                //println(bushes.length + ", " + wolves.length + ", " + rabbits.length);
             }
             background(20 + timeOfDay/2, 20 + timeOfDay, 50 + timeOfDay/10);
             rectMode(CORNER);
@@ -1284,6 +1332,19 @@ var draw = function() {
             }
         }
         if(togglemap) {
+            if(frameCount % 100 === 0) {
+                var a = random(0, 4000);
+                var b = random(0, 4000);
+                var position = round(a/40)*100 + round(b/40);
+                var num = generator.nextGaussian();
+                while(grid[position] > stdev*num + avg){
+                    a = random(0, 4000);
+                    b = random(0, 4000);
+                    position = round(a/40)*100 + round(b/40);
+                }
+                bushes.add(a,b);
+                //println(bushes.length + ", " + wolves.length + ", " + rabbits.length);
+            }
             background(120, 180, 94);
             rectMode(CORNER);
             pushMatrix();
@@ -1306,6 +1367,23 @@ var draw = function() {
             inventory.draw();
             rectMode(CORNER);
             recipes.apply();
+            //Labels
+            fill(0);
+            text("Welcome to: God Mode", 420, 20);
+            fill(255, 0, 0);
+            text("■ - Berries", 420, 50);
+            fill(0, 255, 0);
+            text("■ - Trees", 420, 80);
+            fill(255);
+            text("■ - Stone", 420, 110);
+            fill(0, 255, 255);
+            text("■ - Rabbit Targeted", 420, 140);
+            fill(255, 0, 255);
+            text("■ - Bush Targeted", 420, 170);
+            fill(255, 255, 0);
+            text("■ - Wolf", 420, 200);
+            fill(0, 0, 255);
+            text("■ - Rabbit", 420, 230);
             for(var i = 0; i < 100; i++) {
                 for(var j = 0; j < 100; j++) {
                     noStroke();
@@ -1329,7 +1407,7 @@ var draw = function() {
             for(var i = 0; i < rabbits.length; i++) {
                 stroke(0, 0, 255);
                 point(rabbits[i].x/10, rabbits[i].y/10);
-                stroke(100, 100, 100);
+                stroke(255, 0, 255);
                 if(rabbits[i].minbush !== -1) {
                     point(bushes[rabbits[i].minbush].x/10, bushes[rabbits[i].minbush].y/10);
                 }
@@ -1338,6 +1416,10 @@ var draw = function() {
             for(var i = 0; i < wolves.length; i++) {
                 stroke(255,255,0);
                 point(wolves[i].x/10, wolves[i].y/10);
+                if(wolves[i].target !== -1) {
+                    stroke(0, 255, 255);
+                    point(rabbits[wolves[i].target].x/10, rabbits[wolves[i].target].y/10);
+                }
             }
             pushMatrix();
             fill(0, 0, 0);
