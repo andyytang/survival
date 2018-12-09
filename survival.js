@@ -35,7 +35,7 @@ var mapsize = 4000;
 var togglemap = false;
 var keys = [];
 var generator = new Random(1);
-var scene = -2;
+var scene = 0;
 var timeOfDay = 0;
 //The actual inventory
 var obj_count = [0, 0, 0, 1, 0];
@@ -354,6 +354,7 @@ var Inventory = function(x, y) {
         stroke(100, 100, 100);
         fill(200, 200, 200);
         rectMode(CENTER);
+        textAlign(LEFT);
         rect(this.x, this.y, 315, 65);
         var pos = 0;
         for(var i = 380; i < 650; i += 60) {
@@ -1152,6 +1153,8 @@ mouseClicked = function() {
         generateMap();
         obj_count = [0, 0, 0, 0, 0];
         obj_order = [];
+        Player = new player(random(1000, 3000), random(1000, 3000));
+        score = 0;
         timeOfDay = 0;
         scene = 0;
     }
@@ -1316,7 +1319,6 @@ var gameOver = function(){
 noStroke();
 var draw = function() {
     if(scene === -1){
-        
         TitleScreen();
     }
     if(scene === -2){
