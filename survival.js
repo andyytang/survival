@@ -1016,8 +1016,6 @@ var player = function(x, y) {
         }
     };
 };
-Player = new player(random(1000, 3000), random(1000, 3000));
-cam = new Camera(Player.x, Player.y);
 
 var fireIndex = 0;
 
@@ -1060,6 +1058,11 @@ var back = new Button(422, 481, 250, 60);
 
 var generateMap = function(){
 
+Player = new player(random(1000, 3000), random(1000, 3000));
+cam = new Camera(Player.x, Player.y);
+
+wolves.splice(0, wolves.length);
+rabbits.splice(0, rabbits.length);
 
 for(var i = 0; i < 2; i++) {
     wolves.add();
@@ -1145,7 +1148,6 @@ mouseClicked = function() {
         scene = -2;
     }
     if (playAgain.isMouseInside(mouseX, mouseY) && scene === 1){
-        println("true");
         scene = 0;
         Player.health = 50;
         Player.food = 50;
