@@ -35,7 +35,7 @@ var mapsize = 4000;
 var togglemap = false;
 var keys = [];
 var generator = new Random(1);
-var scene = 0;
+var scene = -2;
 var timeOfDay = 0;
 //The actual inventory
 var obj_count = [0, 0, 0, 1, 0];
@@ -354,7 +354,6 @@ var Inventory = function(x, y) {
         stroke(100, 100, 100);
         fill(200, 200, 200);
         rectMode(CENTER);
-        textAlign(LEFT);
         rect(this.x, this.y, 315, 65);
         var pos = 0;
         for(var i = 380; i < 650; i += 60) {
@@ -670,7 +669,7 @@ var rabbit = function(number) {
         // Based on player location
         this.minbush = -1;
         this.minlength = 300;
-        if(frameCount % 400 === 0) {
+        if(frameCount % 800 === 0) {
             this.food--;
         }
         for(var i = 0; i < bushes.length; i++) {
@@ -688,7 +687,7 @@ var rabbit = function(number) {
                 bushes[this.minbush].harvest();
                 this.food += 10;
             }
-            if(this.food === 90) {
+            if(this.food === 70) {
                 this.food = 0;
                 this.addrabbit = true;
             }
@@ -856,7 +855,7 @@ wolves.apply = function() {
         else if(wolves[i].y > 4000) {
             wolves[i].y -= 4000;
         }
-        if(wolves[i].addwolf && wolves.length < 10) {
+        if(wolves[i].addwolf && wolves.length < 5) {
             wolves.add();
             wolves[i].addwolf = false;
         }
@@ -866,13 +865,6 @@ wolves.apply = function() {
     }
 };
 
-for(var i = 0; i < 3; i++) {
-    wolves.add();
-}
-
-for(var i = 0; i < 10; i++) {
-    rabbits.add();
-}
 
 
 var player = function(x, y) {
@@ -1067,7 +1059,16 @@ var returnToMainMenu = new Button(387, 420, 250, 60);
 var back = new Button(422, 481, 250, 60);
 
 var generateMap = function(){
-    
+
+
+for(var i = 0; i < 2; i++) {
+    wolves.add();
+}
+
+for(var i = 0; i < 10; i++) {
+    rabbits.add();
+}    
+
 bushes.splice(0,bushes.length);
 trees.splice(0,bushes.length);
 stones.splice(0, stones.length);
@@ -1144,19 +1145,21 @@ mouseClicked = function() {
         scene = -2;
     }
     if (playAgain.isMouseInside(mouseX, mouseY) && scene === 1){
+        println("true");
+        scene = 0;
+        Player.health = 50;
+        Player.food = 50;
         grid = [];
         generator = new Random(1);
         stdev = 0;
         sum = 0;
-        newMap();
-        fires.splice(0, fires.length);
-        generateMap();
-        obj_count = [0, 0, 0, 0, 0];
+        avg = 0;
+        obj_count = [0, 0, 0, 1, 0];
         obj_order = [];
-        Player = new player(random(1000, 3000), random(1000, 3000));
-        score = 0;
         timeOfDay = 0;
-        scene = 0;
+        fires.splice(0, fires.length);
+        newMap();
+        generateMap();
     }
     if (scene === 0){
     for (var i = 0; i < trees.length; i++) {
@@ -1184,6 +1187,7 @@ mouseClicked = function() {
        obj_count[4]--;
     }
     }
+
 };
 
 newMap();
@@ -1319,6 +1323,7 @@ var gameOver = function(){
 noStroke();
 var draw = function() {
     if(scene === -1){
+        
         TitleScreen();
     }
     if(scene === -2){
