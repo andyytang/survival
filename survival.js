@@ -1262,7 +1262,7 @@ var TitleScreen= function() {
     
     fill(0,0,0);
     textSize(25);
-    text("TBaF v0.01", 25, 575);
+    text("TBaF v0.0.2", 25, 575);
     text("Created for a school project", 675, 575);
         
     pushMatrix();
