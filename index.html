@@ -2,22 +2,102 @@
 <head>
 <title>Survival Game</title>
     <style>
-        h3 {
-            color: #111111;
-            margin-bottom:0;
-            border-bottom:2px orange solid;
-        }
         body {
-            background:linear-gradient(to right, #fff,#ddd);
-            font-family:"Candara", "Open Sans", "Futura", sans-serif;
+            background:linear-gradient(to right, #aaa, #fff);
+            font-family: "Oxygen", "Trebuchet MS", sans-serif;
+            color:#4682b4;
+        }
+        img {
+            position:relative;
+            float:right;
+            margin:50px;
+        }
+        h1 {
+            font-size: 60px;
+            font-family:"Lato", "Helvetica", sans-serif;
+            color: #A55D35;
+            border-bottom:2px solid #A55D35;
+            margin-bottom:0;
+        }
+        h3 {
+            font-size: 36px;
+            font-family:"Lato", "Helvetica", sans-serif;
+            color: #A55D35;
+            border-bottom:2px solid #A55D35;
+            margin-bottom:0;
+        }
+        h6 {
+            font-size: 16px;
+            font-family:"Lato", "Helvetica", sans-serif;
+            display: block;
+            margin-block-start: 1em;
+            margin-block-end: 1em;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;
+        }
+        #wrapper p {
+            text-align:justify;
+        }
+        p {
+            font-size:16px;
+        }
+        div #wrapper {
+            border-bottom:2px #A55D35 solid;
+        }
+        #footer{
+	       /* It's over 9000! */
+	       z-index: 9001;
+	       background-image:-moz-linear-gradient(to right, #edf3f8, #91b6d4);
+	       background-image:-webkit-linear-gradient(to right, #edf3f8, #91b6d4);
+	       background-image:-o-linear-gradient(to right, #edf3f8, #91b6d4);
+	       background-image:linear-gradient(to right, #edf3f8, #91b6d4);
+           color:#A55D35;
+	       float: left;
+	       display: block;
+	       position: fixed;
+           margin: 0px;
+           left: 0;
+	       bottom: 0;
+	       width: 100%;
+	       text-align: center;
+	       height: 60px;
         }
     </style>
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/andyytang/survival/master/concept-art/icon_game.png">
 </head>
 <body>
     <div id = "survival_game">
-        <h3>JavaScript Survival Game (WIP)</h3>
+        <h1>To Build A Fire</h1>
+        <p>To Build A Fire is a survival game coded on the platform 
+           Khan Academy. The premise of the game is that you are stuck
+           in the middle of nowhere with nothing, and you need to try
+           to keep your health above zero (survival). You can use WASD
+            to move, and you can click to harvest items.</p>
+        
+        <h3>Further Instructions</h3>
+        <p>There are things that are out to kill you. Wolves are out to kill
+            you by taking your health directly, while rabbits are out to kill
+            you by stealing the food that you need. Unfortunately, as of this
+            stage, you cannot kill these creatures, but what you <b>can</b> do
+            is sprint (SHIFT) to escape animals and to collect berries (which 
+            increase your food). <b>Food is important!</b> If you don't have food,
+            your health begins decreasing! Make sure your orange food bar stays 
+            above zero by collecting berries.</p>
+        <p>There are other things you can harvest, like wood and stone. You need a wooden
+            pickaxe to harvest stone. Recipes show up as colored squares in the upper-left
+            corner. If you hover over them, they reveal the name of their recipe. The ones
+            you should care about are <b>fire</b> which increases your health for a short
+            period of time, <b>trail mix</b>, made of berries that increase your food, and
+            <b>pickaxe</b>, which is used to harvest the stone to build a fire. Good luck!</p>
+        <h3>The Game</h3>
         <script src="https://www.khanacademy.org/computer-programming/work-in-progress/6619625737191424/embed.js?editor=no&buttons=yes&author=yes&embed=yes&width=1000&height=600">
 </script>
+        <h3>Source Code</h3>
+        <p>Raw source code can be found at https://raw.githubusercontent.com/andyytang/survival/master/survival.js. All
+            files and issues are hosted on https://github.com/andyytang/survival/. This game was coded with Khan Academy
+            (https://khanacademy.org/computing/computer-programming)</p>
+        <div id="footer">
+            <h6>Contact: andyyt2@illinois.edu</h6>
+        </div>
     </div>
 </body>
