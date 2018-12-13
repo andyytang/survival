@@ -9,12 +9,8 @@
  * Show stats on where you are and angle
  * Add map you can see at bottom left
  * Add toggle map with "m" key
- * 5 slot inventory (although 10 slots displayed on screen
- * @TODO:
- * Add comments on current code
- * Make collide function
- * Make other inanimate objects
- * Other features that we need to add...
+ * 5 slot inventory
+ *
 ***/
 
 /**
@@ -35,11 +31,11 @@ var mapsize = 4000;
 var togglemap = false;
 var keys = [];
 var generator = new Random(1);
-var scene = -2;
+var scene = -1;
 var timeOfDay = 0;
 //The actual inventory
-var obj_count = [0, 0, 0, 1, 0];
-var obj_order = [3];
+var obj_count = [0, 0, 0, 0, 0];
+var obj_order = [];
 var score = 0;
 textFont(createFont("Calibri"), 15);
 }
@@ -81,10 +77,10 @@ var newMap = function(){
 keyPressed = function(){
     // Set the keycode to true
     keys[keyCode] = true;
-    // If 'm' pressed toggle the map
-    if(keys[77]) {
+    // If 'm' pressed toggle the map  (if u want to cheat change this lol)
+    /*if(keys[77]) {
         togglemap = !togglemap;
-    }
+    }*/
     // If number key pressed select item in inventory
     for (var i = 48; i <= 52; i++){
         if (keys[i]){
@@ -168,7 +164,7 @@ SmallFire.prototype.draw = function() {
         if (this.time % 50 === 0 && this.time > 0 && Player.inFireRange(this) === true){
             Player.health = Player.health + 1;
         }
-        if (this.time < 500){
+        if (this.time < 750){
             this.time++;
         } else {
             this.time = 0;
@@ -628,7 +624,7 @@ bushes.apply = function() {
 //For the rabbit
 var wolves = [];
 
-//rabbit -- WIP
+//Rabbit
 var rabbit = function(number) {
     this.number = number;
     this.x = random(0, 4000);
@@ -741,7 +737,7 @@ var wolf = function() {
     this.x = random(0, 4000);
     this.y = random(0, 4000);
     this.dir = random(0, 360);
-    this.health = 200;
+    this.health = 150;
     this.hearradius = 600;
     this.food = 0;
     this.target = -1;
@@ -822,8 +818,8 @@ var wolf = function() {
             if(this.target === -1 && dist(this.x, this.y, Player.x, Player.y) < this.hearradius && !togglemap) {
                 //Move towards the player accurately
                 this.dir = atan2(this.x - Player.x, Player.y - this.y) + 90;
-                this.x += cos(this.dir)*1.4;
-                this.y += sin(this.dir)*1.4;
+                this.x += cos(this.dir)*1.35;
+                this.y += sin(this.dir)*1.35;
                 if(dist(this.x, this.y, Player.x, Player.y) < 20 && frameCount%50 === 0) {
                     Player.health -= 10;
                 }
@@ -876,7 +872,7 @@ var player = function(x, y) {
     this.r = 20;
     this.interval = 0;
     this.health = 50;
-    this.food = 50;
+    this.food = 100;
     this.dir = atan2(this.y - mouseY, mouseX - this.x);
     this.negative = false;
     this.speedLimit = 3;
@@ -975,7 +971,7 @@ var player = function(x, y) {
             this.interval += 5;
         }
         this.interval++;
-        if (this.interval % 500 === 0 && this.interval > 0){
+        if (this.interval % 1000 === 0 && this.interval > 0){
             if (this.food !== 0){
                 this.food -= 5;
             }
@@ -1378,7 +1374,7 @@ var draw = function() {
             }
         }
         if(togglemap) {
-            if(frameCount % 100 === 0) {
+            if(frameCount % 200 === 0) {
                 var a = random(0, 4000);
                 var b = random(0, 4000);
                 var position = round(a/40)*100 + round(b/40);
